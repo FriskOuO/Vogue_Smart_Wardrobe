@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Vogue Smart Wardrobe</string>
+    <string name="title_activity_main">Vogue Smart Wardrobe</string>
+    <string name="package_name">com.vogueai.wardrobe</string>
+    <string name="custom_url_scheme">com.vogueai.wardrobe</string>
+</resources>
