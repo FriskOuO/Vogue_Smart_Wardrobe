@@ -9,6 +9,7 @@
 
     <form method="POST" action="{{ route('login') }}">
         @csrf
+        <input type="hidden" name="locale" class="js-locale-input" value="{{ app()->getLocale() }}">
 
         <!-- Email Address -->
         <div>

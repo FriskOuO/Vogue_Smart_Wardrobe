@@ -16,6 +16,7 @@
     <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
         @csrf
         @method('patch')
+        <input type="hidden" name="locale" class="js-locale-field" value="{{ app()->getLocale() }}">
 
         <div>
             <x-input-label for="name" :value="__('Name')" />

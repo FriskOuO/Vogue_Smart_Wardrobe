@@ -124,6 +124,10 @@
                 localStorage.setItem('vogue-home-lang', activeLang);
                 document.documentElement.lang = activeLang === 'zh' ? 'zh-Hant' : 'en';
 
+                document.querySelectorAll('.js-locale-input').forEach((input) => {
+                    input.value = activeLang === 'zh' ? 'zh_TW' : 'en';
+                });
+
                 document.querySelectorAll('[data-i18n]').forEach((el) => {
                     const key = el.dataset.i18n;
                     const value = authI18nMap[activeLang][key];

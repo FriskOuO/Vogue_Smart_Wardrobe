@@ -6,6 +6,7 @@
 
     <form method="POST" action="{{ route('register') }}">
         @csrf
+        <input type="hidden" name="locale" class="js-locale-input" value="{{ app()->getLocale() }}">
 
         <!-- Name -->
         <div>
