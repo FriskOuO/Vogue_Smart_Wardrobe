@@ -21,26 +21,7 @@
         </div>
     </div>
 
-    <header class="vogue-shell py-6 md:py-8">
-        <nav class="vogue-nav">
-            <a href="{{ route('dashboard') }}" class="vogue-brand"><span class="vogue-brand-mark">V</span><span>VogueAI</span></a>
-            <div class="vogue-nav-links">
-                <a href="{{ route('dashboard') }}" data-i18n="nav_dashboard">Dashboard</a>
-                <a href="{{ route('profile.show') }}" data-i18n="nav_account">Account</a>
-                <a href="{{ route('profile.edit') }}" data-i18n="nav_edit">Edit</a>
-            </div>
-            <div class="vogue-nav-cta">
-                <div class="vogue-tools">
-                    <button id="edit-lang-toggle" type="button" class="vogue-switch"><span class="vogue-switch-label" data-i18n="switch_lang">中 / EN</span></button>
-                    <button id="edit-theme-toggle" type="button" class="vogue-switch"><span class="vogue-switch-label" data-i18n="switch_theme">夜間</span></button>
-                </div>
-                <a href="{{ route('profile.show') }}" class="vogue-btn vogue-btn-soft" data-i18n="go_account">帳號總覽</a>
-                <form method="POST" action="{{ route('logout') }}" class="inline-block">@csrf
-                    <button type="submit" class="vogue-btn vogue-btn-solid" data-i18n="logout">登出</button>
-                </form>
-            </div>
-        </nav>
-    </header>
+    <x-vogue-auth-nav />
 
     <main class="vogue-shell pb-16 md:pb-24 space-y-6">
         <section class="vogue-highlight reveal">
@@ -78,21 +59,21 @@
     <script>
         const i18n = {
             zh: {
-                nav_dashboard: '儀表板', nav_account: '帳號總覽', nav_edit: '編輯帳號', switch_lang: '中 / EN', switch_theme: '夜間',
+                nav_dashboard: '儀表板', nav_account: '帳號總覽', nav_edit: '編輯帳號', nav_users: '使用者管理', switch_lang: '中 / EN', switch_theme: '夜間',
                 go_account: '帳號總覽', logout: '登出', eyebrow: 'ACCOUNT EDITOR', title: '帳號 CRUD 控制台',
                 subtitle: '在同一頁完成資料更新、密碼更新與帳號刪除，流程與風格同步首頁與 dashboard。',
                 crud_update: 'Update: 修改姓名與 Email', crud_password: 'Update: 修改密碼', crud_delete: 'Delete: 危險區刪除帳號'
             },
             en: {
-                nav_dashboard: 'Dashboard', nav_account: 'Account', nav_edit: 'Edit', switch_lang: 'EN / 中', switch_theme: 'Night',
+                nav_dashboard: 'Dashboard', nav_account: 'Account', nav_edit: 'Edit', nav_users: 'User Management', switch_lang: 'EN / 中', switch_theme: 'Night',
                 go_account: 'Account Overview', logout: 'Log out', eyebrow: 'ACCOUNT EDITOR', title: 'Account CRUD Console',
                 subtitle: 'Update profile data, update password, and delete account in one page with a unified visual style.',
                 crud_update: 'Update: edit name and email', crud_password: 'Update: change password', crud_delete: 'Delete: remove account in danger zone'
             }
         };
 
-        const langToggle = document.getElementById('edit-lang-toggle');
-        const themeToggle = document.getElementById('edit-theme-toggle');
+        const langToggle = document.getElementById('vogue-lang-toggle');
+        const themeToggle = document.getElementById('vogue-theme-toggle');
         const storageLang = 'vogue-home-lang';
         const storageTheme = 'vogue-home-theme';
         const appLocale = '{{ app()->getLocale() }}' === 'zh_TW' ? 'zh' : 'en';

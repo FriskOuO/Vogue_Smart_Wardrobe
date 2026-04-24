@@ -24,25 +24,7 @@
     <div class="vogue-bg-orb vogue-bg-orb-a" aria-hidden="true"></div>
     <div class="vogue-bg-orb vogue-bg-orb-b" aria-hidden="true"></div>
 
-    <header class="vogue-shell py-6 md:py-8">
-        <nav class="vogue-nav">
-            <a href="{{ route('dashboard') }}" class="vogue-brand"><span class="vogue-brand-mark">V</span><span>VogueAI</span></a>
-            <div class="vogue-nav-links">
-                <a href="{{ route('admin.users.index') }}" data-i18n="nav_users">Users</a>
-                <a href="{{ route('profile.show') }}" data-i18n="nav_account">Account</a>
-            </div>
-            <div class="vogue-nav-cta">
-                <div class="vogue-tools">
-                    <button id="create-lang-toggle" type="button" class="vogue-switch"><span class="vogue-switch-label" data-i18n="switch_lang">中 / EN</span></button>
-                    <button id="create-theme-toggle" type="button" class="vogue-switch"><span class="vogue-switch-label" data-i18n="switch_theme">夜間</span></button>
-                </div>
-                <a href="{{ route('admin.users.index') }}" class="vogue-btn vogue-btn-soft" data-i18n="back">返回</a>
-                <form method="POST" action="{{ route('logout') }}" class="inline-block">@csrf
-                    <button type="submit" class="vogue-btn vogue-btn-solid" data-i18n="logout">登出</button>
-                </form>
-            </div>
-        </nav>
-    </header>
+    <x-vogue-auth-nav />
 
     <main class="vogue-shell pb-16 md:pb-24 space-y-6">
         <section class="vogue-highlight reveal">
@@ -104,9 +86,9 @@
     </main>
 
     <script>
-        const i18n = { zh: { nav_users: '使用者管理', nav_account: '帳號總覽', switch_lang: '中 / EN', switch_theme: '夜間', back: '返回', logout: '登出', eyebrow: 'ADMIN CRUD', subtitle: '建立新帳號並指定角色，支援 admin / user 兩種常見權限模型。', point_1: '建立新帳號', point_2: '指定角色', point_3: '同步語言與主題', create: '建立', cancel: '取消' }, en: { nav_users: 'Users', nav_account: 'Account', switch_lang: 'EN / 中', switch_theme: 'Night', back: 'Back', logout: 'Log out', eyebrow: 'ADMIN CRUD', subtitle: 'Create a new account and assign a role with the standard admin/user model.', point_1: 'Create a new account', point_2: 'Assign a role', point_3: 'Keep language and theme in sync', create: 'Create', cancel: 'Cancel' } };
-        const langToggle = document.getElementById('create-lang-toggle');
-        const themeToggle = document.getElementById('create-theme-toggle');
+        const i18n = { zh: { nav_dashboard: '儀表板', nav_account: '帳號總覽', nav_users: '使用者管理', switch_lang: '中 / EN', switch_theme: '夜間', back: '返回', logout: '登出', eyebrow: 'ADMIN CRUD', subtitle: '建立新帳號並指定角色，支援 admin / user 兩種常見權限模型。', point_1: '建立新帳號', point_2: '指定角色', point_3: '同步語言與主題', create: '建立', cancel: '取消' }, en: { nav_dashboard: 'Dashboard', nav_account: 'Account', nav_users: 'Users', switch_lang: 'EN / 中', switch_theme: 'Night', back: 'Back', logout: 'Log out', eyebrow: 'ADMIN CRUD', subtitle: 'Create a new account and assign a role with the standard admin/user model.', point_1: 'Create a new account', point_2: 'Assign a role', point_3: 'Keep language and theme in sync', create: 'Create', cancel: 'Cancel' } };
+        const langToggle = document.getElementById('vogue-lang-toggle');
+        const themeToggle = document.getElementById('vogue-theme-toggle');
         const storageLang = 'vogue-home-lang';
         const storageTheme = 'vogue-home-theme';
         const appLocale = '{{ app()->getLocale() }}' === 'zh_TW' ? 'zh' : 'en';

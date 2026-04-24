@@ -48,38 +48,7 @@
     <div class="vogue-bg-orb vogue-bg-orb-a" aria-hidden="true"></div>
     <div class="vogue-bg-orb vogue-bg-orb-b" aria-hidden="true"></div>
 
-    <header class="vogue-shell py-6 md:py-8">
-        <nav class="vogue-nav">
-            <a href="{{ route('dashboard') }}" class="vogue-brand">
-                <span class="vogue-brand-mark">V</span>
-                <span>VogueAI</span>
-            </a>
-            <div class="vogue-nav-links">
-                <a href="#overview" data-i18n="nav_overview">總覽</a>
-                <a href="#features" data-i18n="nav_features">功能</a>
-                <a href="#platform" data-i18n="nav_platform">平台</a>
-            </div>
-            <div class="vogue-nav-cta">
-                <div class="vogue-tools">
-                    <button id="dash-lang-toggle" type="button" class="vogue-switch" aria-label="Toggle language">
-                        <span class="vogue-switch-label" data-i18n="switch_lang">中 / EN</span>
-                    </button>
-                    <button id="dash-theme-toggle" type="button" class="vogue-switch" aria-label="Toggle theme">
-                        <span class="vogue-switch-label" data-i18n="switch_theme">夜間</span>
-                    </button>
-                </div>
-                @if (auth()->user()->isAdmin())
-                    <a href="{{ route('admin.users.index') }}" class="vogue-btn vogue-btn-outline" data-i18n="users_manage">使用者管理</a>
-                @endif
-                <a href="{{ route('profile.show') }}" class="vogue-btn vogue-btn-soft" data-i18n="account">帳號總覽</a>
-                <a href="{{ route('profile.edit') }}" class="vogue-btn vogue-btn-outline" data-i18n="settings">編輯帳號</a>
-                <form method="POST" action="{{ route('logout') }}" class="inline-block">
-                    @csrf
-                    <button type="submit" class="vogue-btn vogue-btn-solid" data-i18n="logout">登出</button>
-                </form>
-            </div>
-        </nav>
-    </header>
+    <x-vogue-auth-nav />
 
     <main class="vogue-shell pb-16 md:pb-24" id="overview">
         <section class="vogue-highlight reveal">
@@ -101,17 +70,17 @@
                 <p data-i18n="features_desc">以情境與能力分組展示，登入後可以即時看到每個模組要做的核心內容。</p>
             </div>
             <div class="vogue-grid">
-                <article class="vogue-card reveal"><h3>Smart Closet</h3><p data-i18n="f1">自動標籤、多維分類、CLIP 搜尋、CRUD、穿著統計</p></article>
-                <article class="vogue-card reveal"><h3>AI Stylist</h3><p data-i18n="f2">情境推薦、風格學習、預覽</p></article>
-                <article class="vogue-card reveal"><h3>Virtual Try-On</h3><p data-i18n="f3">換裝、預覽、分享</p></article>
-                <article class="vogue-card reveal"><h3>Digital Twin</h3><p data-i18n="f4">多視角生成、GLB 導出</p></article>
-                <article class="vogue-card reveal"><h3>Blind Box</h3><p data-i18n="f5">隨機穿搭、收藏</p></article>
-                <article class="vogue-card reveal"><h3>Runway Video</h3><p data-i18n="f6">走秀影片（Veo）</p></article>
-                <article class="vogue-card reveal"><h3>Community</h3><p data-i18n="f7">貼文 / 讚 / 評 / 追蹤 + WebSocket</p></article>
-                <article class="vogue-card reveal"><h3>Trend Report</h3><p data-i18n="f8">趨勢分析、熱門標籤</p></article>
-                <article class="vogue-card reveal"><h3>Chat Assistant</h3><p data-i18n="f9">Gemini 時尚諮詢</p></article>
-                <article class="vogue-card reveal"><h3>Showcase</h3><p data-i18n="f10">商家商品展示、一鍵入庫</p></article>
-                <article class="vogue-card reveal"><h3>User System</h3><p data-i18n="f11">JWT、個資 / 偏好、隱私</p></article>
+                <a href="{{ route('features.show', ['feature' => 'smart-closet']) }}" class="vogue-card reveal block"><h3>Smart Closet</h3><p data-i18n="f1">自動標籤、多維分類、CLIP 搜尋、CRUD、穿著統計</p></a>
+                <a href="{{ route('features.show', ['feature' => 'ai-stylist']) }}" class="vogue-card reveal block"><h3>AI Stylist</h3><p data-i18n="f2">情境推薦、風格學習、預覽</p></a>
+                <a href="{{ route('features.show', ['feature' => 'virtual-try-on']) }}" class="vogue-card reveal block"><h3>Virtual Try-On</h3><p data-i18n="f3">換裝、預覽、分享</p></a>
+                <a href="{{ route('features.show', ['feature' => 'digital-twin']) }}" class="vogue-card reveal block"><h3>Digital Twin</h3><p data-i18n="f4">多視角生成、GLB 導出</p></a>
+                <a href="{{ route('features.show', ['feature' => 'blind-box']) }}" class="vogue-card reveal block"><h3>Blind Box</h3><p data-i18n="f5">隨機穿搭、收藏</p></a>
+                <a href="{{ route('features.show', ['feature' => 'runway-video']) }}" class="vogue-card reveal block"><h3>Runway Video</h3><p data-i18n="f6">走秀影片（Veo）</p></a>
+                <a href="{{ route('features.show', ['feature' => 'community']) }}" class="vogue-card reveal block"><h3>Community</h3><p data-i18n="f7">貼文 / 讚 / 評 / 追蹤 + WebSocket</p></a>
+                <a href="{{ route('features.show', ['feature' => 'trend-report']) }}" class="vogue-card reveal block"><h3>Trend Report</h3><p data-i18n="f8">趨勢分析、熱門標籤</p></a>
+                <a href="{{ route('features.show', ['feature' => 'chat-assistant']) }}" class="vogue-card reveal block"><h3>Chat Assistant</h3><p data-i18n="f9">Gemini 時尚諮詢</p></a>
+                <a href="{{ route('features.show', ['feature' => 'showcase']) }}" class="vogue-card reveal block"><h3>Showcase</h3><p data-i18n="f10">商家商品展示、一鍵入庫</p></a>
+                <a href="{{ route('features.show', ['feature' => 'user-system']) }}" class="vogue-card reveal block"><h3>User System</h3><p data-i18n="f11">JWT、個資 / 偏好、隱私</p></a>
             </div>
         </section>
 
@@ -136,6 +105,7 @@
         const i18n = {
             zh: {
                 nav_overview: '總覽', nav_features: '功能', nav_platform: '平台', switch_lang: '中 / EN', switch_theme: '夜間',
+                nav_users: '使用者管理',
                 users_manage: '使用者管理', account: '帳號總覽', settings: '編輯帳號', logout: '登出', welcome: 'WELCOME',
                 title: '{{ auth()->user()->name }}，歡迎回來', subtitle: '這裡是登入後的功能總覽介面，整合產品能力、AI 模組與平台技術，方便團隊安排開發優先序。',
                 point_1: '集中查看功能狀態與子能力清單', point_2: '同步 README 能力面與開發規劃', point_3: '快速進入帳號與設定流程',
@@ -148,6 +118,7 @@
             },
             en: {
                 nav_overview: 'Overview', nav_features: 'Features', nav_platform: 'Platform', switch_lang: 'EN / 中', switch_theme: 'Night',
+                nav_users: 'User Management',
                 users_manage: 'User Management', account: 'Account', settings: 'Settings', logout: 'Log out', welcome: 'WELCOME',
                 title: '{{ auth()->user()->name }}, welcome back', subtitle: 'This post-login dashboard maps product capabilities, AI modules, and platform stack for better planning.',
                 point_1: 'Track modules and capability checklists in one place', point_2: 'Keep README scope aligned with implementation', point_3: 'Jump to account and settings quickly',
@@ -161,8 +132,8 @@
             }
         };
 
-        const langToggle = document.getElementById('dash-lang-toggle');
-        const themeToggle = document.getElementById('dash-theme-toggle');
+        const langToggle = document.getElementById('vogue-lang-toggle');
+        const themeToggle = document.getElementById('vogue-theme-toggle');
         const storageLang = 'vogue-home-lang';
         const storageTheme = 'vogue-home-theme';
 

@@ -24,25 +24,7 @@
     <div class="vogue-bg-orb vogue-bg-orb-a" aria-hidden="true"></div>
     <div class="vogue-bg-orb vogue-bg-orb-b" aria-hidden="true"></div>
 
-    <header class="vogue-shell py-6 md:py-8">
-        <nav class="vogue-nav">
-            <a href="{{ route('dashboard') }}" class="vogue-brand"><span class="vogue-brand-mark">V</span><span>VogueAI</span></a>
-            <div class="vogue-nav-links">
-                <a href="{{ route('admin.users.index') }}" data-i18n="nav_users">Users</a>
-                <a href="{{ route('admin.users.edit', $user) }}" data-i18n="nav_edit">Edit</a>
-            </div>
-            <div class="vogue-nav-cta">
-                <div class="vogue-tools">
-                    <button id="show-lang-toggle" type="button" class="vogue-switch"><span class="vogue-switch-label" data-i18n="switch_lang">中 / EN</span></button>
-                    <button id="show-theme-toggle" type="button" class="vogue-switch"><span class="vogue-switch-label" data-i18n="switch_theme">夜間</span></button>
-                </div>
-                <a href="{{ route('admin.users.edit', $user) }}" class="vogue-btn vogue-btn-soft" data-i18n="edit">編輯</a>
-                <form method="POST" action="{{ route('logout') }}" class="inline-block">@csrf
-                    <button type="submit" class="vogue-btn vogue-btn-solid" data-i18n="logout">登出</button>
-                </form>
-            </div>
-        </nav>
-    </header>
+    <x-vogue-auth-nav />
 
     <main class="vogue-shell pb-16 md:pb-24 space-y-6">
         <section class="vogue-highlight reveal">
@@ -94,9 +76,9 @@
     </main>
 
     <script>
-        const i18n = { zh: { nav_users: '使用者', nav_edit: '編輯', switch_lang: '中 / EN', switch_theme: '夜間', edit: '編輯', logout: '登出', eyebrow: 'ADMIN DETAIL', point_1: '可檢視角色與加入時間', point_2: '可直接跳轉編輯或刪除', point_3: '與 admin / user 權限模型一致', name: '姓名', email: '電子郵件', role: '角色', joined: '加入時間', back: '返回' }, en: { nav_users: 'Users', nav_edit: 'Edit', switch_lang: 'EN / 中', switch_theme: 'Night', edit: 'Edit', logout: 'Log out', eyebrow: 'ADMIN DETAIL', point_1: 'Inspect role and join date', point_2: 'Jump directly to edit or delete', point_3: 'Matches the admin/user permission model', name: 'Name', email: 'Email', role: 'Role', joined: 'Joined', back: 'Back' } };
-        const langToggle = document.getElementById('show-lang-toggle');
-        const themeToggle = document.getElementById('show-theme-toggle');
+        const i18n = { zh: { nav_dashboard: '儀表板', nav_account: '帳號總覽', nav_users: '使用者', nav_edit: '編輯', switch_lang: '中 / EN', switch_theme: '夜間', edit: '編輯', logout: '登出', eyebrow: 'ADMIN DETAIL', point_1: '可檢視角色與加入時間', point_2: '可直接跳轉編輯或刪除', point_3: '與 admin / user 權限模型一致', name: '姓名', email: '電子郵件', role: '角色', joined: '加入時間', back: '返回' }, en: { nav_dashboard: 'Dashboard', nav_account: 'Account', nav_users: 'Users', nav_edit: 'Edit', switch_lang: 'EN / 中', switch_theme: 'Night', edit: 'Edit', logout: 'Log out', eyebrow: 'ADMIN DETAIL', point_1: 'Inspect role and join date', point_2: 'Jump directly to edit or delete', point_3: 'Matches the admin/user permission model', name: 'Name', email: 'Email', role: 'Role', joined: 'Joined', back: 'Back' } };
+        const langToggle = document.getElementById('vogue-lang-toggle');
+        const themeToggle = document.getElementById('vogue-theme-toggle');
         const storageLang = 'vogue-home-lang';
         const storageTheme = 'vogue-home-theme';
         const appLocale = '{{ app()->getLocale() }}' === 'zh_TW' ? 'zh' : 'en';

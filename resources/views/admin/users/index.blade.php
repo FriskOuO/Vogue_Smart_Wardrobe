@@ -30,26 +30,7 @@
     <div class="vogue-bg-orb vogue-bg-orb-a" aria-hidden="true"></div>
     <div class="vogue-bg-orb vogue-bg-orb-b" aria-hidden="true"></div>
 
-    <header class="vogue-shell py-6 md:py-8">
-        <nav class="vogue-nav">
-            <a href="{{ route('dashboard') }}" class="vogue-brand"><span class="vogue-brand-mark">V</span><span>VogueAI</span></a>
-            <div class="vogue-nav-links">
-                <a href="{{ route('dashboard') }}" data-i18n="nav_dashboard">Dashboard</a>
-                <a href="{{ route('profile.show') }}" data-i18n="nav_account">Account</a>
-                <a href="{{ route('admin.users.index') }}" data-i18n="nav_users">Users</a>
-            </div>
-            <div class="vogue-nav-cta">
-                <div class="vogue-tools">
-                    <button id="admin-lang-toggle" type="button" class="vogue-switch"><span class="vogue-switch-label" data-i18n="switch_lang">中 / EN</span></button>
-                    <button id="admin-theme-toggle" type="button" class="vogue-switch"><span class="vogue-switch-label" data-i18n="switch_theme">夜間</span></button>
-                </div>
-                <a href="{{ route('admin.users.create') }}" class="vogue-btn vogue-btn-solid" data-i18n="create_user">建立使用者</a>
-                <form method="POST" action="{{ route('logout') }}" class="inline-block">@csrf
-                    <button type="submit" class="vogue-btn vogue-btn-soft" data-i18n="logout">登出</button>
-                </form>
-            </div>
-        </nav>
-    </header>
+    <x-vogue-auth-nav />
 
     <main class="vogue-shell pb-16 md:pb-24 space-y-6">
         <section class="vogue-highlight reveal">
@@ -144,8 +125,8 @@
             zh: { nav_dashboard: '儀表板', nav_account: '帳號總覽', nav_users: '使用者', switch_lang: '中 / EN', switch_theme: '夜間', create_user: '建立使用者', logout: '登出', eyebrow: 'ADMIN PANEL', title: '使用者管理', subtitle: '可建立、檢視、更新與刪除整個系統中的使用者帳號。', point_1: 'CRUD：檢視、建立、編輯、刪除所有帳號', point_2: 'Roles：區分 admin 與 user', point_3: '搜尋：以姓名或 Email 快速定位', search: '搜尋', reset: '重設' },
             en: { nav_dashboard: 'Dashboard', nav_account: 'Account', nav_users: 'Users', switch_lang: 'EN / 中', switch_theme: 'Night', create_user: 'Create User', logout: 'Log out', eyebrow: 'ADMIN PANEL', title: 'User Management', subtitle: 'Create, inspect, update, and delete user accounts across the system.', point_1: 'CRUD: view, create, edit, delete every account', point_2: 'Roles: separate admin and user', point_3: 'Search: find by name or email', search: 'Search', reset: 'Reset' }
         };
-        const langToggle = document.getElementById('admin-lang-toggle');
-        const themeToggle = document.getElementById('admin-theme-toggle');
+        const langToggle = document.getElementById('vogue-lang-toggle');
+        const themeToggle = document.getElementById('vogue-theme-toggle');
         const storageLang = 'vogue-home-lang';
         const storageTheme = 'vogue-home-theme';
         const appLocale = '{{ app()->getLocale() }}' === 'zh_TW' ? 'zh' : 'en';

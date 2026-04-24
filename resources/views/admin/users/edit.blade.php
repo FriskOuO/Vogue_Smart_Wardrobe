@@ -23,25 +23,7 @@
     <div class="vogue-bg-orb vogue-bg-orb-a" aria-hidden="true"></div>
     <div class="vogue-bg-orb vogue-bg-orb-b" aria-hidden="true"></div>
 
-    <header class="vogue-shell py-6 md:py-8">
-        <nav class="vogue-nav">
-            <a href="{{ route('dashboard') }}" class="vogue-brand"><span class="vogue-brand-mark">V</span><span>VogueAI</span></a>
-            <div class="vogue-nav-links">
-                <a href="{{ route('admin.users.index') }}" data-i18n="nav_users">Users</a>
-                <a href="{{ route('admin.users.show', $user) }}" data-i18n="nav_detail">Detail</a>
-            </div>
-            <div class="vogue-nav-cta">
-                <div class="vogue-tools">
-                    <button id="edit-lang-toggle" type="button" class="vogue-switch"><span class="vogue-switch-label" data-i18n="switch_lang">中 / EN</span></button>
-                    <button id="edit-theme-toggle" type="button" class="vogue-switch"><span class="vogue-switch-label" data-i18n="switch_theme">夜間</span></button>
-                </div>
-                <a href="{{ route('admin.users.index') }}" class="vogue-btn vogue-btn-soft" data-i18n="back">返回</a>
-                <form method="POST" action="{{ route('logout') }}" class="inline-block">@csrf
-                    <button type="submit" class="vogue-btn vogue-btn-solid" data-i18n="logout">登出</button>
-                </form>
-            </div>
-        </nav>
-    </header>
+    <x-vogue-auth-nav />
 
     <main class="vogue-shell pb-16 md:pb-24 space-y-6">
         <section class="vogue-highlight reveal">
@@ -77,9 +59,9 @@
     </main>
 
     <script>
-        const i18n = { zh: { nav_users: '使用者', nav_detail: '詳細資料', switch_lang: '中 / EN', switch_theme: '夜間', back: '返回', logout: '登出', eyebrow: 'ADMIN CRUD', title: '編輯使用者', subtitle: '可同步更新個資、角色與密碼，並保留危險刪除區塊。', point_1: '更新姓名、Email、角色', point_2: '密碼可選更新', point_3: '保留刪除危險區' }, en: { nav_users: 'Users', nav_detail: 'Detail', switch_lang: 'EN / 中', switch_theme: 'Night', back: 'Back', logout: 'Log out', eyebrow: 'ADMIN CRUD', title: 'Edit User', subtitle: 'Update profile data, role, and password while keeping the danger zone intact.', point_1: 'Update name, email, role', point_2: 'Password update is optional', point_3: 'Keep the delete danger zone' } };
-        const langToggle = document.getElementById('edit-lang-toggle');
-        const themeToggle = document.getElementById('edit-theme-toggle');
+        const i18n = { zh: { nav_dashboard: '儀表板', nav_account: '帳號總覽', nav_users: '使用者', nav_detail: '詳細資料', switch_lang: '中 / EN', switch_theme: '夜間', back: '返回', logout: '登出', eyebrow: 'ADMIN CRUD', title: '編輯使用者', subtitle: '可同步更新個資、角色與密碼，並保留危險刪除區塊。', point_1: '更新姓名、Email、角色', point_2: '密碼可選更新', point_3: '保留刪除危險區' }, en: { nav_dashboard: 'Dashboard', nav_account: 'Account', nav_users: 'Users', nav_detail: 'Detail', switch_lang: 'EN / 中', switch_theme: 'Night', back: 'Back', logout: 'Log out', eyebrow: 'ADMIN CRUD', title: 'Edit User', subtitle: 'Update profile data, role, and password while keeping the danger zone intact.', point_1: 'Update name, email, role', point_2: 'Password update is optional', point_3: 'Keep the delete danger zone' } };
+        const langToggle = document.getElementById('vogue-lang-toggle');
+        const themeToggle = document.getElementById('vogue-theme-toggle');
         const storageLang = 'vogue-home-lang';
         const storageTheme = 'vogue-home-theme';
         const appLocale = '{{ app()->getLocale() }}' === 'zh_TW' ? 'zh' : 'en';

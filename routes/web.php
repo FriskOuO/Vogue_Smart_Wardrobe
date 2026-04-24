@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +12,10 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/features/{feature}', [FeatureController::class, 'show'])
+    ->middleware(['auth', 'verified'])
+    ->name('features.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/account', [ProfileController::class, 'show'])->name('profile.show');
