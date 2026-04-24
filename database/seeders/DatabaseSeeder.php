@@ -15,11 +15,24 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        User::query()->updateOrCreate(
+            ['email' => 'admin.dev@vogueai.local'],
+            [
+                'name' => 'Admin Dev',
+                'password' => 'Admin@123456',
+                'role' => 'admin',
+                'email_verified_at' => now(),
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::query()->updateOrCreate(
+            ['email' => 'demo.user@vogueai.local'],
+            [
+                'name' => 'Demo User',
+                'password' => 'User@123456',
+                'role' => 'user',
+                'email_verified_at' => now(),
+            ]
+        );
     }
 }

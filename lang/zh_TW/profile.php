@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'profile_information' => '個人資料',
+    'profile_information_help' => '更新你的帳號個人資料與 Email。',
+    'name' => '姓名',
+    'email' => '電子郵件',
+    'email_unverified' => '你的電子郵件尚未驗證。',
+    'resend_verification' => '點擊這裡重新寄送驗證信。',
+    'verification_sent' => '新的驗證連結已寄送到你的電子郵件。',
+    'save' => '儲存',
+    'saved' => '已儲存。',
+    'update_password' => '更新密碼',
+    'update_password_help' => '請使用長度足夠且隨機性高的密碼來保護帳號安全。',
+    'current_password' => '目前密碼',
+    'new_password' => '新密碼',
+    'confirm_password' => '確認密碼',
+    'delete_account' => '刪除帳號',
+    'delete_account_help' => '刪除帳號後，所有相關資料都會被永久移除。刪除前請先下載或備份你想保留的資料。',
+    'delete_confirm_title' => '你確定要刪除帳號嗎？',
+    'delete_confirm_help' => '帳號刪除後將無法復原。請輸入密碼以確認你要永久刪除帳號。',
+    'password' => '密碼',
+    'cancel' => '取消',
+    'verified' => '已驗證',
+    'not_verified' => '尚未驗證',
+];

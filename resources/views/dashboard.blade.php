@@ -68,6 +68,9 @@
                         <span class="vogue-switch-label" data-i18n="switch_theme">夜間</span>
                     </button>
                 </div>
+                @if (auth()->user()->isAdmin())
+                    <a href="{{ route('admin.users.index') }}" class="vogue-btn vogue-btn-outline" data-i18n="users_manage">使用者管理</a>
+                @endif
                 <a href="{{ route('profile.show') }}" class="vogue-btn vogue-btn-soft" data-i18n="account">帳號總覽</a>
                 <a href="{{ route('profile.edit') }}" class="vogue-btn vogue-btn-outline" data-i18n="settings">編輯帳號</a>
                 <form method="POST" action="{{ route('logout') }}" class="inline-block">
@@ -133,7 +136,7 @@
         const i18n = {
             zh: {
                 nav_overview: '總覽', nav_features: '功能', nav_platform: '平台', switch_lang: '中 / EN', switch_theme: '夜間',
-                account: '帳號總覽', settings: '編輯帳號', logout: '登出', welcome: 'WELCOME',
+                users_manage: '使用者管理', account: '帳號總覽', settings: '編輯帳號', logout: '登出', welcome: 'WELCOME',
                 title: '{{ auth()->user()->name }}，歡迎回來', subtitle: '這裡是登入後的功能總覽介面，整合產品能力、AI 模組與平台技術，方便團隊安排開發優先序。',
                 point_1: '集中查看功能狀態與子能力清單', point_2: '同步 README 能力面與開發規劃', point_3: '快速進入帳號與設定流程',
                 features_title: '功能模組地圖', features_desc: '以情境與能力分組展示，登入後可以即時看到每個模組要做的核心內容。',
@@ -145,7 +148,7 @@
             },
             en: {
                 nav_overview: 'Overview', nav_features: 'Features', nav_platform: 'Platform', switch_lang: 'EN / 中', switch_theme: 'Night',
-                account: 'Account', settings: 'Settings', logout: 'Log out', welcome: 'WELCOME',
+                users_manage: 'User Management', account: 'Account', settings: 'Settings', logout: 'Log out', welcome: 'WELCOME',
                 title: '{{ auth()->user()->name }}, welcome back', subtitle: 'This post-login dashboard maps product capabilities, AI modules, and platform stack for better planning.',
                 point_1: 'Track modules and capability checklists in one place', point_2: 'Keep README scope aligned with implementation', point_3: 'Jump to account and settings quickly',
                 features_title: 'Feature Map', features_desc: 'Grouped by capabilities so the team can prioritize and execute faster.',

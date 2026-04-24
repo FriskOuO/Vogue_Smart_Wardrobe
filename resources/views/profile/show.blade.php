@@ -65,7 +65,7 @@
                 </article>
                 <article class="vogue-card reveal">
                     <h3 data-i18n="verify_title">Email 驗證狀態</h3>
-                    <p>{{ $user->email_verified_at ? __('Verified') : __('Not verified yet') }}</p>
+                    <p>{{ $user->email_verified_at ? __('profile.verified') : __('profile.not_verified') }}</p>
                 </article>
                 <article class="vogue-card reveal">
                     <h3 data-i18n="crud_title">CRUD 快捷操作</h3>
@@ -99,6 +99,7 @@
         const themeToggle = document.getElementById('account-theme-toggle');
         const storageLang = 'vogue-home-lang';
         const storageTheme = 'vogue-home-theme';
+        const appLocale = '{{ app()->getLocale() }}' === 'zh_TW' ? 'zh' : 'en';
 
         const applyTheme = (theme) => {
             document.body.dataset.theme = theme;
@@ -132,12 +133,20 @@
         }, { threshold: 0.12 });
         document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 
+        if (!localStorage.getItem(storageLang)) {
+            localStorage.setItem(storageLang, appLocale);
+        }
         applyTheme(localStorage.getItem(storageTheme) || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
-        applyLanguage(localStorage.getItem(storageLang) || 'zh');
+        applyLanguage(localStorage.getItem(storageLang) || appLocale);
 
         langToggle.addEventListener('click', () => {
             const current = localStorage.getItem(storageLang) || 'zh';
-            applyLanguage(current === 'zh' ? 'en' : 'zh');
+            const next = current === 'zh' ? 'en' : 'zh';
+            localStorage.setItem(storageLang, next);
+            const localeParam = next === 'zh' ? 'zh_TW' : 'en';
+            const url = new URL(window.location.href);
+            url.searchParams.set('locale', localeParam);
+            window.location.href = url.toString();
         });
         themeToggle.addEventListener('click', () => {
             const current = document.body.dataset.theme || 'dark';
