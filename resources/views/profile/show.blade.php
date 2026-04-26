@@ -63,13 +63,19 @@
     <script>
         const i18n = {
             zh: {
-                nav_dashboard: '儀表板', nav_account: '帳號總覽', nav_edit: '編輯帳號', nav_users: '使用者管理', switch_lang: '中 / EN', switch_theme: '夜間',
+                nav_dashboard: '儀表板', nav_account: '帳號總覽', nav_edit: '編輯帳號', nav_users: '使用者管理', nav_closet: 'My Closet', sidebar_main: '主要入口', sidebar_features: '功能切換', sidebar_readme_modules: '未完成暫放區', sidebar_staging_note: '這裡是舊版 README 模組的暫放工作台，待後端完成後再正式串接。', toggle_sidebar: '側欄',
+                feature_smart_closet: 'Smart Closet Hub', feature_upload: '上傳衣物', feature_ai_search: 'AI 搜尋', feature_ai_stylist: 'AI Stylist', feature_try_on: 'Try-On / 姿態', feature_digital_twin: 'Digital Twin', feature_community: 'Community',
+                module_community: 'Community', module_showcase: 'Showcase', module_blind_box: 'Blind Box', module_runway_video: 'Runway Video', module_chat_assistant: 'Chat Assistant', module_digital_twin: 'Digital Twin', module_travel_packer: 'Travel Packer', module_smart_storage: 'Smart Storage', module_quick_snap: 'Quick Snap', module_smart_tag: 'Smart Tag', module_magic_mirror: 'Magic Mirror', module_ai_bestie_call: 'AI Bestie Call',
+                switch_lang: '中 / EN', switch_theme: '夜間',
                 go_edit: '編輯資料', logout: '登出', eyebrow: 'ACCOUNT OVERVIEW', crud_read: 'Read: 檢視帳號資訊與驗證狀態',
                 crud_update: 'Update: 進入編輯頁修改個資與密碼', crud_delete: 'Delete: 進入編輯頁永久刪除帳號', joined_title: '註冊時間',
                 verify_title: 'Email 驗證狀態', crud_title: 'CRUD 快捷操作', crud_read_btn: 'Read', crud_update_btn: 'Update', crud_delete_btn: 'Delete'
             },
             en: {
-                nav_dashboard: 'Dashboard', nav_account: 'Account', nav_edit: 'Edit', nav_users: 'User Management', switch_lang: 'EN / 中', switch_theme: 'Night',
+                nav_dashboard: 'Dashboard', nav_account: 'Account', nav_edit: 'Edit', nav_users: 'User Management', nav_closet: 'My Closet', sidebar_main: 'Main', sidebar_features: 'Features', sidebar_readme_modules: 'Staging Modules', sidebar_staging_note: 'Temporary workspace for legacy README modules before backend integration is completed.', toggle_sidebar: 'Sidebar',
+                feature_smart_closet: 'Smart Closet Hub', feature_upload: 'Upload Garment', feature_ai_search: 'AI Search', feature_ai_stylist: 'AI Stylist', feature_try_on: 'Try-On / Pose', feature_digital_twin: 'Digital Twin', feature_community: 'Community',
+                module_community: 'Community', module_showcase: 'Showcase', module_blind_box: 'Blind Box', module_runway_video: 'Runway Video', module_chat_assistant: 'Chat Assistant', module_digital_twin: 'Digital Twin', module_travel_packer: 'Travel Packer', module_smart_storage: 'Smart Storage', module_quick_snap: 'Quick Snap', module_smart_tag: 'Smart Tag', module_magic_mirror: 'Magic Mirror', module_ai_bestie_call: 'AI Bestie Call',
+                switch_lang: 'EN / 中', switch_theme: 'Night',
                 go_edit: 'Edit Profile', logout: 'Log out', eyebrow: 'ACCOUNT OVERVIEW', crud_read: 'Read: view profile and verification status',
                 crud_update: 'Update: edit profile information and password', crud_delete: 'Delete: go to edit page and remove account', joined_title: 'Joined At',
                 verify_title: 'Email Verification', crud_title: 'CRUD Quick Actions', crud_read_btn: 'Read', crud_update_btn: 'Update', crud_delete_btn: 'Delete'

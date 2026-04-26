@@ -59,13 +59,19 @@
     <script>
         const i18n = {
             zh: {
-                nav_dashboard: '儀表板', nav_account: '帳號總覽', nav_edit: '編輯帳號', nav_users: '使用者管理', switch_lang: '中 / EN', switch_theme: '夜間',
+                nav_dashboard: '儀表板', nav_account: '帳號總覽', nav_edit: '編輯帳號', nav_users: '使用者管理', nav_closet: 'My Closet', sidebar_main: '主要入口', sidebar_features: '功能切換', sidebar_readme_modules: '未完成暫放區', sidebar_staging_note: '這裡是舊版 README 模組的暫放工作台，待後端完成後再正式串接。', toggle_sidebar: '側欄',
+                feature_smart_closet: 'Smart Closet Hub', feature_upload: '上傳衣物', feature_ai_search: 'AI 搜尋', feature_ai_stylist: 'AI Stylist', feature_try_on: 'Try-On / 姿態', feature_digital_twin: 'Digital Twin', feature_community: 'Community',
+                module_community: 'Community', module_showcase: 'Showcase', module_blind_box: 'Blind Box', module_runway_video: 'Runway Video', module_chat_assistant: 'Chat Assistant', module_digital_twin: 'Digital Twin', module_travel_packer: 'Travel Packer', module_smart_storage: 'Smart Storage', module_quick_snap: 'Quick Snap', module_smart_tag: 'Smart Tag', module_magic_mirror: 'Magic Mirror', module_ai_bestie_call: 'AI Bestie Call',
+                switch_lang: '中 / EN', switch_theme: '夜間',
                 go_account: '帳號總覽', logout: '登出', eyebrow: 'ACCOUNT EDITOR', title: '帳號 CRUD 控制台',
                 subtitle: '在同一頁完成資料更新、密碼更新與帳號刪除，流程與風格同步首頁與 dashboard。',
                 crud_update: 'Update: 修改姓名與 Email', crud_password: 'Update: 修改密碼', crud_delete: 'Delete: 危險區刪除帳號'
             },
             en: {
-                nav_dashboard: 'Dashboard', nav_account: 'Account', nav_edit: 'Edit', nav_users: 'User Management', switch_lang: 'EN / 中', switch_theme: 'Night',
+                nav_dashboard: 'Dashboard', nav_account: 'Account', nav_edit: 'Edit', nav_users: 'User Management', nav_closet: 'My Closet', sidebar_main: 'Main', sidebar_features: 'Features', sidebar_readme_modules: 'Staging Modules', sidebar_staging_note: 'Temporary workspace for legacy README modules before backend integration is completed.', toggle_sidebar: 'Sidebar',
+                feature_smart_closet: 'Smart Closet Hub', feature_upload: 'Upload Garment', feature_ai_search: 'AI Search', feature_ai_stylist: 'AI Stylist', feature_try_on: 'Try-On / Pose', feature_digital_twin: 'Digital Twin', feature_community: 'Community',
+                module_community: 'Community', module_showcase: 'Showcase', module_blind_box: 'Blind Box', module_runway_video: 'Runway Video', module_chat_assistant: 'Chat Assistant', module_digital_twin: 'Digital Twin', module_travel_packer: 'Travel Packer', module_smart_storage: 'Smart Storage', module_quick_snap: 'Quick Snap', module_smart_tag: 'Smart Tag', module_magic_mirror: 'Magic Mirror', module_ai_bestie_call: 'AI Bestie Call',
+                switch_lang: 'EN / 中', switch_theme: 'Night',
                 go_account: 'Account Overview', logout: 'Log out', eyebrow: 'ACCOUNT EDITOR', title: 'Account CRUD Console',
                 subtitle: 'Update profile data, update password, and delete account in one page with a unified visual style.',
                 crud_update: 'Update: edit name and email', crud_password: 'Update: change password', crud_delete: 'Delete: remove account in danger zone'

@@ -817,6 +817,252 @@
 		background: color-mix(in srgb, var(--vogue-highlight-bg) 42%, transparent);
 	}
 
+	.vogue-sidebar-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 14;
+		background: rgba(8, 17, 24, 0.52);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 320ms ease;
+	}
+
+	.vogue-sidebar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		z-index: 15;
+		width: 260px;
+		padding: 0.95rem 0.75rem;
+		overflow-y: auto;
+		border-right: 1px solid var(--vogue-line);
+		background: color-mix(in srgb, var(--vogue-panel-bg) 92%, rgba(8, 17, 24, 0.12));
+		backdrop-filter: blur(12px);
+		transition: width 360ms cubic-bezier(0.22, 1, 0.36, 1), transform 320ms ease;
+	}
+
+	.vogue-sidebar-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-bottom: 0.8rem;
+	}
+
+	.vogue-sidebar-brand {
+		font-size: 1.25rem;
+	}
+
+	.vogue-sidebar-section-title {
+		font-size: 0.73rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--vogue-ink-soft);
+		margin: 0.75rem 0 0.5rem;
+		padding: 0 0.45rem;
+	}
+
+	.vogue-sidebar-note {
+		font-size: 0.77rem;
+		line-height: 1.5;
+		color: var(--vogue-ink-soft);
+		padding: 0 0.45rem 0.55rem;
+		opacity: 0.92;
+	}
+
+	.vogue-sidebar-nav {
+		display: grid;
+		gap: 0.35rem;
+	}
+
+	.vogue-sidebar-link {
+		display: grid;
+		grid-template-columns: 1rem 1fr;
+		align-items: center;
+		gap: 0.55rem;
+		padding: 0.6rem 0.6rem;
+		border: 1px solid transparent;
+		border-radius: 0.72rem;
+		color: var(--vogue-ink-soft);
+		font-size: 0.88rem;
+		transition: border-color 280ms ease, background-color 280ms ease, transform 280ms ease, color 280ms ease;
+	}
+
+	.vogue-sidebar-icon {
+		font-size: 0.85rem;
+		line-height: 1;
+		opacity: 0.8;
+	}
+
+	.vogue-sidebar-link:hover {
+		color: var(--vogue-heading);
+		border-color: rgba(223, 176, 119, 0.42);
+		background: color-mix(in srgb, var(--vogue-panel-bg) 84%, transparent);
+		transform: translateX(1px);
+	}
+
+	.vogue-sidebar-link.is-active {
+		color: var(--vogue-heading);
+		border-color: rgba(223, 176, 119, 0.62);
+		background: color-mix(in srgb, var(--vogue-highlight-bg) 46%, transparent);
+	}
+
+	body.vogue-home-body.vogue-has-sidebar .vogue-topbar-wrap {
+		padding-left: 0;
+	}
+
+	body.vogue-home-body.vogue-has-sidebar .vogue-shell {
+		width: auto;
+		max-width: none;
+		margin-left: 280px;
+		margin-right: 1rem;
+	}
+
+	body.vogue-home-body.vogue-has-sidebar.vogue-sidebar-collapsed .vogue-shell {
+		margin-left: 100px;
+	}
+
+	body.vogue-home-body.vogue-has-sidebar.vogue-sidebar-collapsed .vogue-sidebar {
+		width: 80px;
+	}
+
+	body.vogue-home-body.vogue-has-sidebar.vogue-sidebar-collapsed .vogue-sidebar .vogue-sidebar-brand-text,
+	body.vogue-home-body.vogue-has-sidebar.vogue-sidebar-collapsed .vogue-sidebar .vogue-sidebar-section-title,
+	body.vogue-home-body.vogue-has-sidebar.vogue-sidebar-collapsed .vogue-sidebar .vogue-sidebar-note,
+	body.vogue-home-body.vogue-has-sidebar.vogue-sidebar-collapsed .vogue-sidebar .vogue-sidebar-link span:not(.vogue-sidebar-icon) {
+		display: none;
+	}
+
+	body.vogue-home-body.vogue-has-sidebar.vogue-sidebar-collapsed .vogue-sidebar .vogue-sidebar-link {
+		grid-template-columns: 1fr;
+		justify-items: center;
+		padding-inline: 0.25rem;
+	}
+
+	.vogue-topbar {
+		justify-content: space-between;
+	}
+
+	.vogue-closet-toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.9rem;
+	}
+
+	.vogue-closet-grid {
+		margin-top: 1.2rem;
+		display: grid;
+		grid-template-columns: repeat(1, minmax(0, 1fr));
+		gap: 0.8rem;
+	}
+
+	.vogue-closet-item {
+		overflow: hidden;
+		padding: 0;
+	}
+
+	.vogue-closet-item-image {
+		width: 100%;
+		height: 220px;
+		object-fit: cover;
+	}
+
+	.vogue-closet-item-body {
+		padding: 1rem;
+	}
+
+	.vogue-input,
+	.vogue-textarea,
+	.vogue-file-input {
+		width: 100%;
+		border-radius: 0.8rem;
+		border: 1px solid var(--vogue-line);
+		background: color-mix(in srgb, var(--vogue-panel-bg) 82%, transparent);
+		color: var(--vogue-ink);
+		padding: 0.7rem 0.85rem;
+		font-size: 0.92rem;
+		transition: border-color 280ms ease, box-shadow 280ms ease, background-color 500ms ease;
+	}
+
+	.vogue-file-input {
+		padding: 0.55rem 0.6rem;
+	}
+
+	.vogue-input::placeholder,
+	.vogue-textarea::placeholder {
+		color: color-mix(in srgb, var(--vogue-ink-soft) 75%, transparent);
+	}
+
+	.vogue-input:focus,
+	.vogue-textarea:focus,
+	.vogue-file-input:focus {
+		outline: none;
+		border-color: rgba(223, 176, 119, 0.68);
+		box-shadow: 0 0 0 3px rgba(223, 176, 119, 0.2);
+	}
+
+	.vogue-label {
+		display: block;
+		margin-bottom: 0.45rem;
+		font-size: 0.82rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--vogue-ink-soft);
+	}
+
+	.vogue-chip {
+		display: inline-flex;
+		align-items: center;
+		border-radius: 999px;
+		padding: 0.25rem 0.62rem;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		border: 1px solid transparent;
+	}
+
+	.vogue-chip-success {
+		color: #d1fae5;
+		background: rgba(16, 185, 129, 0.2);
+		border-color: rgba(16, 185, 129, 0.4);
+	}
+
+	.vogue-chip-pending {
+		color: #fef3c7;
+		background: rgba(245, 158, 11, 0.2);
+		border-color: rgba(245, 158, 11, 0.38);
+	}
+
+	.vogue-chip-degraded {
+		color: #dbeafe;
+		background: rgba(59, 130, 246, 0.2);
+		border-color: rgba(59, 130, 246, 0.4);
+	}
+
+	body.vogue-home-body[data-theme='light'] .vogue-chip-success {
+		color: #065f46;
+		background: rgba(16, 185, 129, 0.14);
+	}
+
+	body.vogue-home-body[data-theme='light'] .vogue-chip-pending {
+		color: #92400e;
+		background: rgba(245, 158, 11, 0.16);
+	}
+
+	body.vogue-home-body[data-theme='light'] .vogue-chip-degraded {
+		color: #1e40af;
+		background: rgba(59, 130, 246, 0.14);
+	}
+
+	.vogue-empty {
+		text-align: center;
+		padding: 2rem 1.2rem;
+	}
+
 	.vogue-bg-orb {
 		position: fixed;
 		border-radius: 999px;
@@ -886,6 +1132,29 @@
 }
 
 @media (max-width: 680px) {
+	body.vogue-home-body.vogue-has-sidebar .vogue-shell {
+		margin-left: 0.7rem;
+		margin-right: 0.7rem;
+	}
+
+	body.vogue-home-body.vogue-has-sidebar .vogue-sidebar {
+		transform: translateX(-100%);
+		width: min(82vw, 310px);
+	}
+
+	body.vogue-home-body.vogue-has-sidebar.vogue-sidebar-open .vogue-sidebar {
+		transform: translateX(0);
+	}
+
+	body.vogue-home-body.vogue-has-sidebar.vogue-sidebar-open .vogue-sidebar-backdrop {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	body.vogue-home-body.vogue-has-sidebar.vogue-sidebar-collapsed .vogue-shell {
+		margin-left: 0.7rem;
+	}
+
 	.vogue-nav {
 		border-radius: 1.1rem;
 	}

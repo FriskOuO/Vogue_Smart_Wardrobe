@@ -70,7 +70,7 @@
                 <p data-i18n="features_desc">以情境與能力分組展示，登入後可以即時看到每個模組要做的核心內容。</p>
             </div>
             <div class="vogue-grid">
-                <a href="{{ route('features.show', ['feature' => 'smart-closet']) }}" class="vogue-card reveal block"><h3>Smart Closet</h3><p data-i18n="f1">自動標籤、多維分類、CLIP 搜尋、CRUD、穿著統計</p></a>
+                <a href="{{ route('closet.index') }}" class="vogue-card reveal block"><h3>Smart Closet</h3><p data-i18n="f1">自動標籤、多維分類、CLIP 搜尋、CRUD、穿著統計</p></a>
                 <a href="{{ route('features.show', ['feature' => 'ai-stylist']) }}" class="vogue-card reveal block"><h3>AI Stylist</h3><p data-i18n="f2">情境推薦、風格學習、預覽</p></a>
                 <a href="{{ route('features.show', ['feature' => 'virtual-try-on']) }}" class="vogue-card reveal block"><h3>Virtual Try-On</h3><p data-i18n="f3">換裝、預覽、分享</p></a>
                 <a href="{{ route('features.show', ['feature' => 'digital-twin']) }}" class="vogue-card reveal block"><h3>Digital Twin</h3><p data-i18n="f4">多視角生成、GLB 導出</p></a>
@@ -91,7 +91,7 @@
             </div>
             <div class="vogue-stack-grid">
                 <div><h3 data-i18n="stack_front">Frontend</h3><p>Laravel + Blade + Vite + Tailwind</p></div>
-                <div><h3 data-i18n="stack_back">Backend</h3><p>Node.js + Express + SQLite + JWT</p></div>
+                <div><h3 data-i18n="stack_back">Backend</h3><p>Laravel 12 + Breeze Session + SQLite</p></div>
                 <div><h3 data-i18n="stack_ai">AI Service</h3><p>FastAPI + Gemini + CLIP + Qdrant + Veo</p></div>
             </div>
         </section>
@@ -104,8 +104,10 @@
     <script>
         const i18n = {
             zh: {
-                nav_overview: '總覽', nav_features: '功能', nav_platform: '平台', switch_lang: '中 / EN', switch_theme: '夜間',
-                nav_users: '使用者管理',
+                nav_overview: '總覽', nav_features: '功能', nav_platform: '平台', nav_dashboard: '儀表板', nav_account: '帳號總覽', switch_lang: '中 / EN', switch_theme: '夜間',
+                nav_users: '使用者管理', nav_closet: 'My Closet', sidebar_main: '主要入口', sidebar_features: '功能切換', sidebar_readme_modules: '未完成暫放區', sidebar_staging_note: '這裡是舊版 README 模組的暫放工作台，待後端完成後再正式串接。', toggle_sidebar: '側欄',
+                feature_smart_closet: 'Smart Closet Hub', feature_upload: '上傳衣物', feature_ai_search: 'AI 搜尋', feature_ai_stylist: 'AI Stylist', feature_try_on: 'Try-On / 姿態', feature_digital_twin: 'Digital Twin', feature_community: 'Community',
+                module_community: 'Community', module_showcase: 'Showcase', module_blind_box: 'Blind Box', module_runway_video: 'Runway Video', module_chat_assistant: 'Chat Assistant', module_digital_twin: 'Digital Twin', module_travel_packer: 'Travel Packer', module_smart_storage: 'Smart Storage', module_quick_snap: 'Quick Snap', module_smart_tag: 'Smart Tag', module_magic_mirror: 'Magic Mirror', module_ai_bestie_call: 'AI Bestie Call',
                 users_manage: '使用者管理', account: '帳號總覽', settings: '編輯帳號', logout: '登出', welcome: 'WELCOME',
                 title: '{{ auth()->user()->name }}，歡迎回來', subtitle: '這裡是登入後的功能總覽介面，整合產品能力、AI 模組與平台技術，方便團隊安排開發優先序。',
                 point_1: '集中查看功能狀態與子能力清單', point_2: '同步 README 能力面與開發規劃', point_3: '快速進入帳號與設定流程',
@@ -117,8 +119,10 @@
                 stack_front: '前端層', stack_back: '後端層', stack_ai: 'AI 層', footer: '© {year} VogueAI Dashboard.'
             },
             en: {
-                nav_overview: 'Overview', nav_features: 'Features', nav_platform: 'Platform', switch_lang: 'EN / 中', switch_theme: 'Night',
-                nav_users: 'User Management',
+                nav_overview: 'Overview', nav_features: 'Features', nav_platform: 'Platform', nav_dashboard: 'Dashboard', nav_account: 'Account', switch_lang: 'EN / 中', switch_theme: 'Night',
+                nav_users: 'User Management', nav_closet: 'My Closet', sidebar_main: 'Main', sidebar_features: 'Features', sidebar_readme_modules: 'Staging Modules', sidebar_staging_note: 'Temporary workspace for legacy README modules before backend integration is completed.', toggle_sidebar: 'Sidebar',
+                feature_smart_closet: 'Smart Closet Hub', feature_upload: 'Upload Garment', feature_ai_search: 'AI Search', feature_ai_stylist: 'AI Stylist', feature_try_on: 'Try-On / Pose', feature_digital_twin: 'Digital Twin', feature_community: 'Community',
+                module_community: 'Community', module_showcase: 'Showcase', module_blind_box: 'Blind Box', module_runway_video: 'Runway Video', module_chat_assistant: 'Chat Assistant', module_digital_twin: 'Digital Twin', module_travel_packer: 'Travel Packer', module_smart_storage: 'Smart Storage', module_quick_snap: 'Quick Snap', module_smart_tag: 'Smart Tag', module_magic_mirror: 'Magic Mirror', module_ai_bestie_call: 'AI Bestie Call',
                 users_manage: 'User Management', account: 'Account', settings: 'Settings', logout: 'Log out', welcome: 'WELCOME',
                 title: '{{ auth()->user()->name }}, welcome back', subtitle: 'This post-login dashboard maps product capabilities, AI modules, and platform stack for better planning.',
                 point_1: 'Track modules and capability checklists in one place', point_2: 'Keep README scope aligned with implementation', point_3: 'Jump to account and settings quickly',

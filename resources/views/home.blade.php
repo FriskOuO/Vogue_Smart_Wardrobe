@@ -148,7 +148,7 @@
                 </p>
             </div>
             <ul class="vogue-points">
-                <li data-i18n="exp_point_1">前後端相對路徑整合：/api 與 /ai</li>
+                <li data-i18n="exp_point_1">Laravel 主後端整合 Python AI Service（/ai）</li>
                 <li data-i18n="exp_point_2">可延展到 PWA、WebSocket、BullMQ 任務流</li>
                 <li data-i18n="exp_point_3">維持開發階段彈性，方便逐頁遷移與驗證</li>
             </ul>
@@ -165,8 +165,8 @@
                     <p data-i18n="stack_frontend">Laravel Blade + Vite + Tailwind</p>
                 </div>
                 <div>
-                    <h3>API Layer</h3>
-                    <p data-i18n="stack_api">Node.js + Express + SQLite + JWT</p>
+                    <h3>Backend Layer</h3>
+                    <p data-i18n="stack_api">Laravel 12 + Breeze Session + SQLite</p>
                 </div>
                 <div>
                     <h3>AI Layer</h3>
@@ -211,13 +211,13 @@
                 exp_eyebrow: 'One Hub, Multiple Modes',
                 exp_title: '日常穿搭、旅行打包、智慧收納同一套資料驅動',
                 exp_desc: 'Version1 的模組化重構讓頁面、服務與路由更清晰，你可以從首頁直達不同體驗，並逐步把 React 既有能力轉進 Laravel 前台。',
-                exp_point_1: '前後端相對路徑整合：/api 與 /ai',
+                exp_point_1: 'Laravel 主後端整合 Python AI Service（/ai）',
                 exp_point_2: '可延展到 PWA、WebSocket、BullMQ 任務流',
                 exp_point_3: '維持開發階段彈性，方便逐頁遷移與驗證',
                 stack_title: '技術骨幹',
                 stack_desc: '以 Laravel 作為頁面承載層，保留 Node / Python AI 能力，逐步完成跨框架整合。',
                 stack_frontend: 'Laravel Blade + Vite + Tailwind',
-                stack_api: 'Node.js + Express + SQLite + JWT',
+                stack_api: 'Laravel 12 + Breeze Session + SQLite',
                 stack_ai: 'Python FastAPI + CLIP / Gemini / Qdrant',
                 footer: '© {year} VogueAI. Built for modern wardrobes.'
             },
@@ -250,13 +250,13 @@
                 exp_eyebrow: 'One Hub, Multiple Modes',
                 exp_title: 'Daily styling, travel packing, and smart storage on one data backbone',
                 exp_desc: 'The Version1 modular refactor makes pages, services, and routing clearer, so you can migrate React capabilities into Laravel step by step without losing momentum.',
-                exp_point_1: 'Relative routing support for /api and /ai',
+                exp_point_1: 'Laravel as main backend integrated with Python AI Service (/ai)',
                 exp_point_2: 'Extensible to PWA, WebSocket, and BullMQ workflows',
                 exp_point_3: 'Flexible development flow for page-by-page migration',
                 stack_title: 'Technical Backbone',
                 stack_desc: 'Laravel handles the presentation layer while preserving Node and Python AI capabilities for progressive integration.',
                 stack_frontend: 'Laravel Blade + Vite + Tailwind',
-                stack_api: 'Node.js + Express + SQLite + JWT',
+                stack_api: 'Laravel 12 + Breeze Session + SQLite',
                 stack_ai: 'Python FastAPI + CLIP / Gemini / Qdrant',
                 footer: '© {year} VogueAI. Built for modern wardrobes.'
             }
