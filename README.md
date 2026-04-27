@@ -36,14 +36,14 @@ Vogue Smart Wardrobe 是一個以 Laravel + Blade + Vite + Tailwind 建置的智
 
 ### 3) Smart Closet 前端頁面（先行版）
 
-目前 Smart Closet 前端頁面已先建立，後續可直接接後端資料與 AI 結果。
+目前 Smart Closet 前端頁面已先建立，並已開始接上後端資料與 AI 結果。
 
 | 功能 | Route name |
 |---|---|
 | Smart Closet Hub | `closet.hub` |
 | My Closet 列表 | `closet.index` |
 | 新增衣物 | `closet.create` |
-| 儲存提交（目前示範模式） | `closet.store` |
+| 儲存提交（已接正式後端流程） | `closet.store` |
 | 衣物詳細 | `closet.show` |
 | AI Search | `closet.search` |
 | AI Stylist | `closet.stylist` |
@@ -329,6 +329,99 @@ ai_jobs
 
 ---
 
+### 14) 已完成三個核心 Model
+
+已建立並測試：
+
+```text
+app/Models/Clothing.php
+app/Models/AiEmbedding.php
+app/Models/AiJob.php
+```
+
+用途說明：
+
+| Model | 用途 |
+|---|---|
+| `Clothing` | 對應 `clothes`，儲存衣物資料、圖片路徑、AI 分析結果 |
+| `AiEmbedding` | 對應 `ai_embeddings`，儲存 image/text embedding 與 vector metadata |
+| `AiJob` | 對應 `ai_jobs`，作為 Try-on、Pose、Runway Video、AI Stylist 等任務追蹤基礎 |
+
+已使用 tinker 測試 Model 可正常連接資料表。
+
+---
+
+### 15) 已完成 Smart Closet 上傳 + AI 分析主流程
+
+目前 `closet.store` 已從示範模式改為正式後端流程：
+
+```text
+Blade form
+→ Laravel Controller 驗證
+→ storage 存圖
+→ 建立 clothes 資料
+→ 呼叫 Python AI Service /ai/attributes
+→ AI 屬性分析結果寫回 clothes
+→ 呼叫 Python AI Service /ai/embed/image
+→ image embedding 寫入 ai_embeddings
+→ redirect 到 closet.show
+→ 前端顯示 AI 分析結果
+```
+
+目前已完成：
+
+- `closet.index` 改讀 `clothes` 資料表
+- `closet.store` 已處理正式圖片上傳
+- `closet.store` 已呼叫 `AiService::analyzeAttributes()`
+- `closet.store` 已呼叫 `AiService::embedImage()`
+- `closet.show` 改讀單筆衣物資料
+- `closet.show` 可顯示 AI 分析結果
+- 若 AI Service 不可用，衣物仍會保留，並記錄 failed 狀態
+
+---
+
+### 16) 已完成重新分析 / 失敗補救機制
+
+目前已新增兩個後端路由：
+
+| 功能 | Route name | 說明 |
+|---|---|---|
+| 重新分析 AI Attributes | `closet.reanalyze` | 重新呼叫 `/ai/attributes` 並更新 `clothes` |
+| 重新產生 Image Embedding | `closet.reembed` | 重新呼叫 `/ai/embed/image` 並更新 `ai_embeddings` |
+
+目前衣物詳細頁已支援：
+
+```text
+重新分析 AI Attributes
+重新產生 Image Embedding
+```
+
+此機制可用於：
+
+- AI Service 暫時失敗後重新分析
+- mock/degraded 結果後續替換成真實模型結果
+- 重新建立 image embedding
+- 後台維護或展示時快速重跑 AI 流程
+
+---
+
+## 目前 10 大步驟進度
+
+| 編號 | 項目 | 狀態 |
+|---:|---|---|
+| 1 | 架構決策 | 已完成 |
+| 2 | Laravel ⇄ AI Service API 契約 | 已完成 |
+| 3 | DB Schema + Laravel migrations | MVP 核心版已完成 |
+| 4 | 圖片上傳資料流 | 完整 MVP 已完成 |
+| 5 | Python AI 服務工程化 | Mock-first 基礎版已完成，後續可拆 routes/services/config |
+| 6 | Try-on / Digital Twin / Runway Video 分層交付 | 尚未正式展開 |
+| 7 | 後端 / AI 測試計畫 | 尚未正式展開 |
+| 8 | 部署與展示手冊 | 手動啟動流程已完成，文件待整理 |
+| 9 | 4 週里程碑 | 待整理 |
+| 10 | Debug 流程 | 已實際使用 |
+
+---
+
 ## 測試帳號
 
 由 DatabaseSeeder 建立：
@@ -448,20 +541,19 @@ php artisan migrate --path=database/migrations/指定檔案.php
 
 ### 短期下一步
 
-- 建立 `Clothing`、`AiEmbedding`、`AiJob` Model
-- 將 `ClosetController@store` 從示範模式改為正式儲存
-- 完成衣物圖片上傳流程
-- 上傳後呼叫 `AiService::analyzeAttributes()`
-- 將 AI 回傳結果寫入 `clothes` 表
-- 讓 `closet.index` 與 `closet.show` 改讀資料庫資料
+- 串接 `closet.search`
+- 完成 AI Search：以文搜圖 / fallback 搜尋
+- 使用者輸入文字後呼叫 `AiService::embedText()`
+- 再呼叫 `AiService::searchSimilar()`
+- 根據回傳 `clothing_id` 查詢 `clothes`
+- 若 AI 搜尋失敗，fallback 到 SQL LIKE 搜尋
 
 ### 中期目標
 
-- 接入 `image embedding`
-- 完成 AI Search：以文搜圖 / 以圖搜圖
-- 接入 `ai_embeddings` 與相似搜尋流程
-- 串接 `closet.search`
 - 串接 `closet.stylist`
+- 使用 `ai_embeddings` 作為 AI Stylist 候選衣物資料
+- 補上 wear_logs / outfit_logs
+- 加入穿搭紀錄與 RAG 記憶基礎
 
 ### 後期擴充
 
@@ -476,5 +568,5 @@ php artisan migrate --path=database/migrations/指定檔案.php
 ## Git commit 建議
 
 ```text
-feat: add AI service integration and wardrobe schema migrations
+feat: complete smart closet upload AI flow
 ```
