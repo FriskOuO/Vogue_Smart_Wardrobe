@@ -34,20 +34,20 @@ Vogue Smart Wardrobe 是一個以 Laravel + Blade + Vite + Tailwind 建置的智
 
 ---
 
-### 3) Smart Closet 前端頁面（先行版）
+### 3) Smart Closet 前端頁面與後端接線
 
-目前 Smart Closet 前端頁面已先建立，並已開始接上後端資料與 AI 結果。
+目前 Smart Closet 前端頁面已建立，且核心頁面已開始接上資料庫與 AI Service。
 
-| 功能 | Route name |
-|---|---|
-| Smart Closet Hub | `closet.hub` |
-| My Closet 列表 | `closet.index` |
-| 新增衣物 | `closet.create` |
-| 儲存提交（已接正式後端流程） | `closet.store` |
-| 衣物詳細 | `closet.show` |
-| AI Search | `closet.search` |
-| AI Stylist | `closet.stylist` |
-| Try-On / Pose | `closet.tryon` |
+| 功能 | Route name | 目前狀態 |
+|---|---|---|
+| Smart Closet Hub | `closet.hub` | 已有前端頁，可顯示統計資料 |
+| My Closet 列表 | `closet.index` | 已改讀 `clothes` 資料表 |
+| 新增衣物 | `closet.create` | 已可上傳圖片 |
+| 儲存提交 | `closet.store` | 已接正式後端流程 |
+| 衣物詳細 | `closet.show` | 已顯示 DB 與 AI 分析結果 |
+| AI Search | `closet.search` | 已支援以文搜圖 / fallback 搜尋 |
+| AI Stylist | `closet.stylist` | 前端頁已建立，後續接推薦流程 |
+| Try-On / Pose | `closet.tryon` | 前端頁已建立，後續接姿態分析 |
 
 目前已確認新增衣物表單欄位：
 
@@ -110,7 +110,7 @@ workspace.show（/workspace/{module}）
 
 ---
 
-## 今日後端 / AI 串接進度更新
+## 後端 / AI 串接進度更新
 
 ### 7) 已完成 AI API 契約文件
 
@@ -158,12 +158,6 @@ docs/db-schema-plan.md
 | `clothes` | 儲存衣物資料、圖片路徑、AI 屬性分析結果 |
 | `ai_embeddings` | 儲存 image/text embedding、Qdrant point_id、fallback 資訊 |
 | `ai_jobs` | 儲存 AI 任務狀態，例如 Try-on、Pose、Runway Video、AI Stylist |
-
-目前策略：
-
-```text
-先建立最小可跑版本，再逐步擴充 outfits、community_posts、chat_messages、trend_reports 等資料表。
-```
 
 ---
 
@@ -265,16 +259,6 @@ uvicorn main:app --host 127.0.0.1 --port 8001 --reload
 
 ```text
 http://127.0.0.1:8001/health
-```
-
-成功回應：
-
-```json
-{
-  "status": "ok",
-  "service": "VogueAI AI Service",
-  "mock_mode": true
-}
 ```
 
 ---
@@ -396,12 +380,42 @@ Blade form
 重新產生 Image Embedding
 ```
 
-此機制可用於：
+---
 
-- AI Service 暫時失敗後重新分析
-- mock/degraded 結果後續替換成真實模型結果
-- 重新建立 image embedding
-- 後台維護或展示時快速重跑 AI 流程
+### 17) 已完成 AI Search 以文搜圖 / fallback 搜尋
+
+目前 `closet.search` 已從固定假資料改為可操作的 AI Search 流程。
+
+已完成流程：
+
+```text
+使用者輸入搜尋文字
+→ Laravel 呼叫 Python AI Service /ai/embed/text
+→ 取得 text embedding
+→ Laravel 呼叫 Python AI Service /ai/search/similar
+→ Python 回傳 topK clothing_id
+→ Laravel 依 clothing_id 查詢 clothes 資料表
+→ Blade 顯示搜尋結果卡片
+```
+
+目前已支援：
+
+- 以文字搜尋衣物，例如「白色上衣」
+- 顯示搜尋模式，例如 `mock` 或 `keyword_fallback`
+- 顯示搜尋結果衣物卡片
+- 顯示 similarity score
+- 可點擊「查看衣物」進入 `closet.show`
+- AI Service 關閉時自動 fallback 到 SQL LIKE 關鍵字搜尋
+
+fallback 流程：
+
+```text
+AI Service 不可用
+→ Laravel AiService 回傳 failed
+→ ClosetController 改用 keywordSearch()
+→ 查詢 clothes.name / category / subcategory / color
+→ 頁面顯示 keyword_fallback 結果
+```
 
 ---
 
@@ -412,7 +426,7 @@ Blade form
 | 1 | 架構決策 | 已完成 |
 | 2 | Laravel ⇄ AI Service API 契約 | 已完成 |
 | 3 | DB Schema + Laravel migrations | MVP 核心版已完成 |
-| 4 | 圖片上傳資料流 | 完整 MVP 已完成 |
+| 4 | 圖片上傳資料流 | 完整 MVP 已完成，含 AI Search 以文搜圖與 fallback 搜尋 |
 | 5 | Python AI 服務工程化 | Mock-first 基礎版已完成，後續可拆 routes/services/config |
 | 6 | Try-on / Digital Twin / Runway Video 分層交付 | 尚未正式展開 |
 | 7 | 後端 / AI 測試計畫 | 尚未正式展開 |
@@ -541,12 +555,16 @@ php artisan migrate --path=database/migrations/指定檔案.php
 
 ### 短期下一步
 
-- 串接 `closet.search`
-- 完成 AI Search：以文搜圖 / fallback 搜尋
-- 使用者輸入文字後呼叫 `AiService::embedText()`
-- 再呼叫 `AiService::searchSimilar()`
-- 根據回傳 `clothing_id` 查詢 `clothes`
-- 若 AI 搜尋失敗，fallback 到 SQL LIKE 搜尋
+- 進入第 5 項：Python AI 服務工程化
+- 將目前單檔 `ai_service/main.py` 拆成正式 FastAPI 專案結構
+- 建議拆分：
+  - `config.py`
+  - `schemas.py`
+  - `routes/ai_routes.py`
+  - `services/mock_ai_service.py`
+  - `utils/security.py`
+- 保持現有五個 AI endpoint 功能不變
+- 重構後重新測試 `/health` 與五個 AI endpoint
 
 ### 中期目標
 
@@ -568,5 +586,5 @@ php artisan migrate --path=database/migrations/指定檔案.php
 ## Git commit 建議
 
 ```text
-feat: complete smart closet upload AI flow
+feat: complete smart closet AI search flow
 ```

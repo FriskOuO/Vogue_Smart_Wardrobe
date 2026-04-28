@@ -237,7 +237,7 @@ def search_similar(
             }
         )
 
-    return {
+        return {
         "schema_version": "v1",
         "request_id": payload.request_id,
         "status": "degraded",
@@ -249,7 +249,7 @@ def search_similar(
         "results": [
             {
                 "rank": 1,
-                "clothing_id": 21,
+                "clothing_id": 1,
                 "score": 0.75,
                 "reason": "目前為 mock mode，回傳展示用相似衣物結果",
                 "metadata": {
@@ -261,7 +261,7 @@ def search_similar(
             },
             {
                 "rank": 2,
-                "clothing_id": 18,
+                "clothing_id": 8,
                 "score": 0.68,
                 "reason": "目前為 mock mode，依模擬相似度排序",
                 "metadata": {
@@ -274,7 +274,6 @@ def search_similar(
         ],
         "message": "目前為 mock mode，已回傳展示用相似搜尋結果"
     }
-
 
 @app.post("/ai/pose")
 def analyze_pose(
