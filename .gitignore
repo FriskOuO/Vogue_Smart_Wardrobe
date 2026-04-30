@@ -28,3 +28,13 @@ ai_service/.env
 ai_service/.venv
 __pycache__/
 *.pyc
+# Python AI model files
+ai_service/models/**/*.pt
+ai_service/models/**/*.pth
+ai_service/models/**/*.onnx
+ai_service/models/**/*.bin
+ai_service/models/**/*.safetensors
+ai_service/models/**/*.ckpt
+
+# Keep model documentation
+!ai_service/models/**/README.md

@@ -31,14 +31,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/closet/ai-search', [ClosetController::class, 'search'])->name('closet.search');
     Route::get('/closet/stylist', [ClosetController::class, 'stylist'])->name('closet.stylist');
     Route::get('/closet/try-on', [ClosetController::class, 'tryOn'])->name('closet.tryon');
+    Route::post('/closet/try-on', [ClosetController::class, 'storeTryOn'])->name('closet.tryon.store');
     Route::post('/closet', [ClosetController::class, 'store'])->name('closet.store');
     Route::get('/closet/{id}', [ClosetController::class, 'show'])->name('closet.show');
-
+    Route::post('/closet/{id}/reanalyze', [ClosetController::class, 'reanalyze'])->name('closet.reanalyze');
+    Route::post('/closet/{id}/reembed', [ClosetController::class, 'reembed'])->name('closet.reembed');
+    Route::post('/workspace/runway-video', [WorkspaceController::class, 'storeRunwayVideo'])
+    ->name('workspace.runway-video.store');
     Route::get('/workspace/{module}', [WorkspaceController::class, 'show'])->name('workspace.show');
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('users', UserManagementController::class);
 });
+Route::post('/workspace/digital-twin', [WorkspaceController::class, 'storeDigitalTwin'])
+    ->name('workspace.digital-twin.store');
 
 require __DIR__.'/auth.php';

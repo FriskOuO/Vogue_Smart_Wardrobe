@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiJob;
 use App\Models\AiEmbedding;
 use App\Models\Clothing;
 use App\Services\AiService;
@@ -270,15 +271,105 @@ class ClosetController extends Controller
         ]);
     }
 
-    public function tryOn(): View
-    {
-        return view('closet.tryon', [
-            'poseJobs' => [
-                ['id' => 'POSE-2401', 'status' => 'success', 'mode' => 'mock'],
-                ['id' => 'POSE-2402', 'status' => 'pending', 'mode' => 'mock'],
-            ],
+   public function tryOn(): View
+{
+    $clothes = Clothing::where('user_id', auth()->id())
+        ->latest()
+        ->get();
+
+    $poseJobs = AiJob::where('user_id', auth()->id())
+        ->where('job_type', 'pose_analysis')
+        ->latest()
+        ->limit(10)
+        ->get()
+        ->map(function (AiJob $job) {
+            return [
+                'id' => 'POSE-' . str_pad((string) $job->id, 4, '0', STR_PAD_LEFT),
+                'status' => $job->status,
+                'mode' => $job->mode ?? 'mock',
+                'clothing_id' => $job->clothing_id,
+                'request_id' => $job->request_id,
+                'result' => $job->result_json,
+                'error_code' => $job->error_code,
+                'error_message' => $job->error_message,
+                'created_at' => optional($job->created_at)->format('Y-m-d H:i:s'),
+            ];
+        });
+
+    return view('closet.tryon', [
+        'clothes' => $clothes,
+        'poseJobs' => $poseJobs,
+    ]);
+}
+
+    public function storeTryOn(Request $request, AiService $aiService): RedirectResponse
+{
+    $validated = $request->validate([
+        'clothing_id' => ['required', 'integer'],
+        'person_photo' => ['required', 'image', 'max:5120'],
+    ]);
+
+    $clothing = Clothing::where('user_id', auth()->id())
+        ->findOrFail($validated['clothing_id']);
+
+    $personPhotoPath = $request->file('person_photo')
+        ->store('tryon/' . auth()->id(), 'public');
+
+    $job = AiJob::create([
+        'user_id' => auth()->id(),
+        'clothing_id' => $clothing->id,
+        'job_type' => 'pose_analysis',
+        'status' => 'processing',
+        'mode' => 'mock',
+        'input_json' => [
+            'person_photo_path' => $personPhotoPath,
+            'person_photo_url' => asset('storage/' . $personPhotoPath),
+            'clothing_id' => $clothing->id,
+            'clothing_name' => $clothing->name,
+            'clothing_image_url' => $clothing->display_image_url,
+            'task_type' => 'try_on_l1',
+        ],
+        'started_at' => now(),
+    ]);
+
+    $poseResult = $aiService->analyzePose([
+        'user_id' => auth()->id(),
+        'image_path' => $personPhotoPath,
+        'image_url' => asset('storage/' . $personPhotoPath),
+        'task_type' => 'try_on_l1',
+    ]);
+
+    if (in_array($poseResult['status'] ?? 'failed', ['success', 'degraded'], true)) {
+        $job->update([
+            'status' => $poseResult['status'],
+            'mode' => $poseResult['mode'] ?? 'mock',
+            'request_id' => $poseResult['request_id'] ?? null,
+            'result_json' => $poseResult,
+            'degraded_reason' => $poseResult['degraded_reason'] ?? null,
+            'error_code' => null,
+            'error_message' => null,
+            'completed_at' => now(),
         ]);
+
+        return redirect()
+            ->route('closet.tryon')
+            ->with('status', 'Try-on L1 任務已完成，目前使用 Pose mock / degraded 結果展示。');
     }
+
+    $job->update([
+        'status' => 'failed',
+        'mode' => null,
+        'request_id' => $poseResult['request_id'] ?? null,
+        'result_json' => $poseResult,
+        'error_code' => $poseResult['error']['code'] ?? 'AI_POSE_UNKNOWN_ERROR',
+        'error_message' => $poseResult['error']['message'] ?? 'Pose 分析失敗',
+        'completed_at' => now(),
+    ]);
+
+    return redirect()
+        ->route('closet.tryon')
+        ->with('status', 'Try-on L1 任務失敗，已記錄錯誤。');
+}
 
     private function applyAttributesResult(Clothing $clothing, array $aiResult): void
     {

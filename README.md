@@ -47,7 +47,7 @@ Vogue Smart Wardrobe 是一個以 Laravel + Blade + Vite + Tailwind 建置的智
 | 衣物詳細 | `closet.show` | 已顯示 DB 與 AI 分析結果 |
 | AI Search | `closet.search` | 已支援以文搜圖 / fallback 搜尋 |
 | AI Stylist | `closet.stylist` | 前端頁已建立，後續接推薦流程 |
-| Try-On / Pose | `closet.tryon` | 前端頁已建立，後續接姿態分析 |
+| Try-On / Pose | `closet.tryon` | 已完成 Try-on L1 任務流程，可建立 pose job |
 
 目前已確認新增衣物表單欄位：
 
@@ -419,6 +419,131 @@ AI Service 不可用
 
 ---
 
+### 18) 已完成 Try-on / Runway Video / Digital Twin L1 展示版
+
+目前已依照分層交付策略，完成三個 AI 亮點功能的 L1 可展示版本。
+
+L1 目標是：
+
+```text
+可操作
+可建立任務
+可產生結果
+可顯示狀態
+即使是 mock / degraded 也能完整展示流程
+```
+
+---
+
+#### Try-on L1
+
+目前 Try-on L1 已完成：
+
+```text
+closet.tryon
+→ 選擇衣物
+→ 上傳人物圖片
+→ 建立 ai_jobs
+→ 呼叫 Python AI Service /ai/pose
+→ 寫回 ai_jobs.result_json
+→ 頁面顯示 mock / degraded pose 結果
+```
+
+已完成內容：
+
+- 可從 Try-on 頁面建立任務
+- 可選擇衣櫥中的衣物
+- 可上傳人物照片
+- 任務會寫入 `ai_jobs`
+- 會呼叫 `/ai/pose`
+- 回傳 mock keypoints
+- 頁面會顯示任務狀態、mode、request_id、posture notes、fit notes、keypoints 數量
+
+目前定位：
+
+```text
+Try-on L1 採 Pose mock / degraded 展示模式，先完成任務流程與姿態分析展示，後續可升級 YOLO Pose 或真實 Try-on 模型。
+```
+
+---
+
+#### Runway Video L1
+
+目前 Runway Video L1 已完成：
+
+```text
+workspace / runway-video
+→ 選擇衣物
+→ 輸入影片風格與鏡頭節奏
+→ 建立 ai_jobs
+→ 產生 mock storyboard
+→ 寫回 ai_jobs.result_json
+→ 頁面顯示 prompt + 分鏡結果
+```
+
+已完成內容：
+
+- 可從 Runway Video workspace 建立任務
+- 可選擇衣櫥中的衣物
+- 可輸入影片風格與鏡頭節奏
+- 任務會寫入 `ai_jobs`
+- 會產生 storyboard：
+  - Opening Walk
+  - Front Look
+  - Detail Focus
+  - Final Pose
+- 頁面會顯示任務狀態、mode、request_id、prompt、4 個 storyboard scenes
+
+目前定位：
+
+```text
+Runway Video L1 採 Storyboard 展示模式，尚未接真實影片生成 API。後續可升級成 queue 任務，並接入 Veo / RunwayML / Pika 等影片生成服務。
+```
+
+---
+
+#### Digital Twin L1
+
+目前 Digital Twin L1 已完成：
+
+```text
+workspace / digital-twin
+→ 輸入身高、風格偏好、常見場合
+→ 建立 ai_jobs
+→ 產生 mock Digital Twin Profile
+→ 寫回 ai_jobs.result_json
+→ 頁面顯示個人風格卡與 avatar placeholder
+```
+
+已完成內容：
+
+- 可從 Digital Twin workspace 建立個人風格卡
+- 可輸入身高、風格偏好、常見穿搭場合與補充說明
+- 任務會寫入 `ai_jobs`
+- 頁面會顯示 Avatar Placeholder、Style Summary、recommended direction、style tags
+
+目前定位：
+
+```text
+Digital Twin L1 採個人風格卡展示模式，尚未接真實 3D Avatar 或多視角生成服務。後續可與 AI Stylist、Try-on、Runway Video 共用個人化資料。
+```
+
+---
+
+### 19) 第 6 項分層交付目前進度
+
+目前第 6 項已完成 L1 展示版：
+
+| 功能 | L1 狀態 | 說明 |
+|---|---|---|
+| Try-on | 已完成 | 可建立 Pose 任務並顯示 mock / degraded keypoints |
+| Runway Video | 已完成 | 可建立 storyboard 任務並顯示 prompt + 分鏡 |
+| Digital Twin | 已完成 | 可建立個人風格卡並顯示 mock profile |
+| L2 流程完整版 | 尚未開始 | 後續加入 queue、任務進度、重新執行 |
+| L3 高品質模型版 | 尚未開始 | 後續接真模型或外部 API |
+
+---
+
 ## 目前 10 大步驟進度
 
 | 編號 | 項目 | 狀態 |
@@ -427,8 +552,8 @@ AI Service 不可用
 | 2 | Laravel ⇄ AI Service API 契約 | 已完成 |
 | 3 | DB Schema + Laravel migrations | MVP 核心版已完成 |
 | 4 | 圖片上傳資料流 | 完整 MVP 已完成，含 AI Search 以文搜圖與 fallback 搜尋 |
-| 5 | Python AI 服務工程化 | Mock-first 基礎版已完成，後續可拆 routes/services/config |
-| 6 | Try-on / Digital Twin / Runway Video 分層交付 | 尚未正式展開 |
+| 5 | Python AI 服務工程化 | 工程化 MVP 已完成，包含 FastAPI 拆分、logging、dependencies health check、models 規範 |
+| 6 | Try-on / Digital Twin / Runway Video 分層交付 | L1 展示版已完成，包含 Try-on、Runway Video、Digital Twin |
 | 7 | 後端 / AI 測試計畫 | 尚未正式展開 |
 | 8 | 部署與展示手冊 | 手動啟動流程已完成，文件待整理 |
 | 9 | 4 週里程碑 | 待整理 |
@@ -555,16 +680,11 @@ php artisan migrate --path=database/migrations/指定檔案.php
 
 ### 短期下一步
 
-- 進入第 5 項：Python AI 服務工程化
-- 將目前單檔 `ai_service/main.py` 拆成正式 FastAPI 專案結構
-- 建議拆分：
-  - `config.py`
-  - `schemas.py`
-  - `routes/ai_routes.py`
-  - `services/mock_ai_service.py`
-  - `utils/security.py`
-- 保持現有五個 AI endpoint 功能不變
-- 重構後重新測試 `/health` 與五個 AI endpoint
+- 進入第 7 項：後端 / AI 測試計畫
+- 建立 Laravel Feature tests 規劃
+- 建立 AI Service pytest 規劃
+- 建立 Laravel → AI Service integration smoke test
+- 補上 Try-on / Runway Video / Digital Twin 的 `ai_jobs` 驗收 checklist
 
 ### 中期目標
 
@@ -583,8 +703,24 @@ php artisan migrate --path=database/migrations/指定檔案.php
 
 ---
 
+## 目前最新階段摘要
+
+目前專題後端與 AI 串接已完成：
+
+```text
+1) 架構決策：完成
+2) Laravel ⇄ AI Service API 契約：完成
+3) DB Schema + Laravel migrations：MVP 核心版完成
+4) 圖片上傳資料流：完整 MVP 完成
+5) Python AI 服務工程化：MVP 完成
+6) Try-on / Digital Twin / Runway Video 分層交付：L1 展示版完成
+7) 後端 / AI 測試計畫：下一步
+```
+
+---
+
 ## Git commit 建議
 
 ```text
-feat: complete smart closet AI search flow
+feat: complete ai l1 showcase workflows
 ```

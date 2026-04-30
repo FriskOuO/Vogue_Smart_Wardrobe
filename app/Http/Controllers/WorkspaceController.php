@@ -2,23 +2,237 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiJob;
+use App\Models\Clothing;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class WorkspaceController extends Controller
 {
     public function show(string $module): View
-    {
-        $modules = $this->modules();
+{
+    $modules = $this->modules();
 
-        abort_unless(isset($modules[$module]), 404);
+    abort_unless(isset($modules[$module]), 404);
 
-        $current = $modules[$module];
+    $current = $modules[$module];
 
-        return view('workspace.show', [
-            'module' => $current,
-            'modules' => $modules,
-        ]);
+    $clothes = collect();
+    $runwayJobs = collect();
+    
+
+    if ($module === 'runway-video') {
+        $clothes = Clothing::where('user_id', auth()->id())
+            ->latest()
+            ->get();
+
+        $runwayJobs = AiJob::where('user_id', auth()->id())
+            ->where('job_type', 'runway_video')
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(function (AiJob $job) {
+                return [
+                    'id' => 'RUNWAY-' . str_pad((string) $job->id, 4, '0', STR_PAD_LEFT),
+                    'status' => $job->status,
+                    'mode' => $job->mode ?? 'mock',
+                    'clothing_id' => $job->clothing_id,
+                    'request_id' => $job->request_id,
+                    'result' => $job->result_json,
+                    'error_code' => $job->error_code,
+                    'error_message' => $job->error_message,
+                    'created_at' => optional($job->created_at)->format('Y-m-d H:i:s'),
+                ];
+            });
     }
+    if ($module === 'digital-twin') {
+    $digitalTwinJobs = AiJob::where('user_id', auth()->id())
+        ->where('job_type', 'digital_twin')
+        ->latest()
+        ->limit(10)
+        ->get()
+        ->map(function (AiJob $job) {
+            return [
+                'id' => 'TWIN-' . str_pad((string) $job->id, 4, '0', STR_PAD_LEFT),
+                'status' => $job->status,
+                'mode' => $job->mode ?? 'mock',
+                'request_id' => $job->request_id,
+                'result' => $job->result_json,
+                'error_code' => $job->error_code,
+                'error_message' => $job->error_message,
+                'created_at' => optional($job->created_at)->format('Y-m-d H:i:s'),
+            ];
+        });
+}
+    return view('workspace.show', [
+        'module' => $current,
+        'modules' => $modules,
+        'clothes' => $clothes,
+        'runwayJobs' => $runwayJobs,
+        'digitalTwinJobs' => $digitalTwinJobs,
+    ]);
+}
+
+    public function storeRunwayVideo(Request $request): RedirectResponse
+{
+    $validated = $request->validate([
+        'clothing_id' => ['required', 'integer'],
+        'video_style' => ['required', 'string', 'max:120'],
+        'camera_rhythm' => ['nullable', 'string', 'max:120'],
+    ]);
+
+    $clothing = Clothing::where('user_id', auth()->id())
+        ->findOrFail($validated['clothing_id']);
+
+    $storyboard = [
+        'title' => 'Runway Video L1 Storyboard',
+        'clothing' => [
+            'id' => $clothing->id,
+            'name' => $clothing->name,
+            'category' => $clothing->category,
+            'color' => $clothing->color,
+            'image_url' => $clothing->display_image_url,
+        ],
+        'video_style' => $validated['video_style'],
+        'camera_rhythm' => $validated['camera_rhythm'] ?? 'smooth fashion runway',
+        'scenes' => [
+            [
+                'scene' => 1,
+                'title' => 'Opening Walk',
+                'description' => '模特兒從簡約伸展台入口走出，畫面聚焦整體穿搭輪廓。',
+                'camera' => 'wide shot',
+                'duration_seconds' => 3,
+            ],
+            [
+                'scene' => 2,
+                'title' => 'Front Look',
+                'description' => '鏡頭切到正面，展示衣物顏色、版型與整體比例。',
+                'camera' => 'medium shot',
+                'duration_seconds' => 4,
+            ],
+            [
+                'scene' => 3,
+                'title' => 'Detail Focus',
+                'description' => '鏡頭靠近衣物細節，呈現材質、紋理與搭配亮點。',
+                'camera' => 'close-up',
+                'duration_seconds' => 3,
+            ],
+            [
+                'scene' => 4,
+                'title' => 'Final Pose',
+                'description' => '模特兒停在伸展台中央，以定格姿勢完成時尚展示。',
+                'camera' => 'slow zoom out',
+                'duration_seconds' => 3,
+            ],
+        ],
+        'prompt' => sprintf(
+            'Create a %s fashion runway video featuring %s, color %s, with %s camera rhythm.',
+            $validated['video_style'],
+            $clothing->name,
+            $clothing->color ?? 'neutral',
+            $validated['camera_rhythm'] ?? 'smooth'
+        ),
+        'degraded_reason' => 'RUNWAY_VIDEO_API_NOT_CONNECTED',
+        'message' => '目前為 Runway Video L1 Storyboard 展示模式，尚未接入真實影片生成 API。',
+    ];
+
+    AiJob::create([
+        'user_id' => auth()->id(),
+        'clothing_id' => $clothing->id,
+        'job_type' => 'runway_video',
+        'status' => 'degraded',
+        'mode' => 'mock',
+        'request_id' => 'runway_l1_' . now()->format('YmdHis') . '_' . uniqid(),
+        'input_json' => [
+            'clothing_id' => $clothing->id,
+            'video_style' => $validated['video_style'],
+            'camera_rhythm' => $validated['camera_rhythm'] ?? null,
+        ],
+        'result_json' => $storyboard,
+        'degraded_reason' => 'RUNWAY_VIDEO_API_NOT_CONNECTED',
+        'error_code' => null,
+        'error_message' => null,
+        'started_at' => now(),
+        'completed_at' => now(),
+    ]);
+
+    return redirect()
+        ->route('workspace.show', 'runway-video')
+        ->with('status', 'Runway Video L1 Storyboard 已建立，目前為 mock / degraded 展示模式。');
+}
+
+    public function storeDigitalTwin(Request $request): RedirectResponse
+{
+    $validated = $request->validate([
+        'height_cm' => ['required', 'integer', 'min:100', 'max:230'],
+        'style_preference' => ['required', 'string', 'max:160'],
+        'common_occasion' => ['required', 'string', 'max:160'],
+        'body_note' => ['nullable', 'string', 'max:500'],
+    ]);
+
+    $profile = [
+        'title' => 'Digital Twin L1 Style Profile',
+        'avatar' => [
+            'type' => 'placeholder',
+            'label' => 'VogueAI Digital Twin',
+            'image_url' => null,
+        ],
+        'profile' => [
+            'height_cm' => (int) $validated['height_cm'],
+            'style_preference' => $validated['style_preference'],
+            'common_occasion' => $validated['common_occasion'],
+            'body_note' => $validated['body_note'] ?? null,
+        ],
+        'style_summary' => [
+            'headline' => '以個人偏好建立的 L1 風格分身',
+            'description' => sprintf(
+                '此 Digital Twin 根據身高 %d cm、偏好「%s」與常見場合「%s」建立，目前為 mock / degraded 個人風格卡。',
+                (int) $validated['height_cm'],
+                $validated['style_preference'],
+                $validated['common_occasion']
+            ),
+            'recommended_direction' => [
+                '以衣櫥現有單品建立個人化穿搭基準',
+                '後續可串接 AI Stylist，依照場合與風格偏好推薦穿搭',
+                '未來可接 3D Avatar 或多視角生成服務',
+            ],
+        ],
+        'style_tags' => [
+            $validated['style_preference'],
+            $validated['common_occasion'],
+            'Digital Twin L1',
+            'mock profile',
+        ],
+        'degraded_reason' => 'DIGITAL_TWIN_3D_MODEL_NOT_CONNECTED',
+        'message' => '目前為 Digital Twin L1 個人風格卡展示模式，尚未接入真實 3D 或外部生成服務。',
+    ];
+
+    AiJob::create([
+        'user_id' => auth()->id(),
+        'clothing_id' => null,
+        'job_type' => 'digital_twin',
+        'status' => 'degraded',
+        'mode' => 'mock',
+        'request_id' => 'digital_twin_l1_' . now()->format('YmdHis') . '_' . uniqid(),
+        'input_json' => [
+            'height_cm' => (int) $validated['height_cm'],
+            'style_preference' => $validated['style_preference'],
+            'common_occasion' => $validated['common_occasion'],
+            'body_note' => $validated['body_note'] ?? null,
+        ],
+        'result_json' => $profile,
+        'degraded_reason' => 'DIGITAL_TWIN_3D_MODEL_NOT_CONNECTED',
+        'error_code' => null,
+        'error_message' => null,
+        'started_at' => now(),
+        'completed_at' => now(),
+    ]);
+
+    return redirect()
+        ->route('workspace.show', 'digital-twin')
+        ->with('status', 'Digital Twin L1 個人風格卡已建立，目前為 mock / degraded 展示模式。');
+}
 
     /**
      * @return array<string, array<string, mixed>>
