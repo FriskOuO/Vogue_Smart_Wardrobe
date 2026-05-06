@@ -544,6 +544,134 @@ Digital Twin L1 採個人風格卡展示模式，尚未接真實 3D Avatar 或�
 
 ---
 
+### 20) 已完成後端 / AI 測試計畫與測試骨架
+
+目前第 7 項已完成測試規劃與基本測試骨架。
+
+已建立文件：
+
+```text
+docs/backend-ai-test-plan.md
+docs/manual-acceptance-checklist.md
+docs/test-execution-record.md
+```
+
+已建立 AI Service pytest：
+
+```text
+ai_service/tests/test_health.py
+ai_service/tests/test_ai_routes.py
+ai_service/tests/test_security_validation.py
+```
+
+已建立 Laravel Feature Tests：
+
+```text
+tests/Feature/SmartClosetTest.php
+tests/Feature/AiSearchTest.php
+tests/Feature/AiJobsL1Test.php
+```
+
+目前 Laravel Feature Test 執行結果：
+
+```text
+SmartClosetTest：5 passed / 7 assertions
+AiSearchTest：4 passed / 9 assertions
+AiJobsL1Test：5 passed / 21 assertions
+```
+
+合計：
+
+```text
+14 tests passed
+37 assertions
+```
+
+目前代表：
+
+```text
+Smart Closet 基礎頁面、使用者資料隔離、AI Search fallback、Runway Video L1、Digital Twin L1 的 Feature Test skeleton 已通過。
+```
+
+測試指令：
+
+```powershell
+php artisan test tests/Feature/SmartClosetTest.php
+php artisan test tests/Feature/AiSearchTest.php
+php artisan test tests/Feature/AiJobsL1Test.php
+```
+
+AI Service pytest 指令：
+
+```powershell
+cd ai_service
+python -m pytest
+```
+
+---
+
+### 21) 已完成部署與展示手冊
+
+目前第 8 項已完成本機部署與展示流程整理。
+
+已建立文件：
+
+```text
+docs/demo-deployment-guide.md
+```
+
+文件內容包含：
+
+- 本機展示部署流程
+- Laravel / Vite / Python AI Service 三服務啟動方式
+- `.env` 與 `ai_service/.env` 設定重點
+- SQLite / migration 注意事項
+- 測試帳號
+- 展示路線
+- Laravel Feature Test 與 AI Service pytest 指令
+- 常見錯誤排除
+- Demo 前最小檢查清單
+- 展示講法
+
+---
+
+#### start-all.ps1 一鍵啟動腳本
+
+已建立：
+
+```text
+start-all.ps1
+```
+
+用途：
+
+```text
+一次開啟三個 PowerShell 視窗：
+1. Laravel：php artisan serve
+2. Vite：npm run dev
+3. Python AI Service：uvicorn main:app --host 127.0.0.1 --port 8001 --reload
+```
+
+執行方式：
+
+```powershell
+.\start-all.ps1
+```
+
+若 PowerShell 不允許執行腳本，可先執行：
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+目前代表：
+
+```text
+第 8 項：部署與展示手冊基本完成
+```
+
+---
+
 ## 目前 10 大步驟進度
 
 | 編號 | 項目 | 狀態 |
@@ -554,8 +682,8 @@ Digital Twin L1 採個人風格卡展示模式，尚未接真實 3D Avatar 或�
 | 4 | 圖片上傳資料流 | 完整 MVP 已完成，含 AI Search 以文搜圖與 fallback 搜尋 |
 | 5 | Python AI 服務工程化 | 工程化 MVP 已完成，包含 FastAPI 拆分、logging、dependencies health check、models 規範 |
 | 6 | Try-on / Digital Twin / Runway Video 分層交付 | L1 展示版已完成，包含 Try-on、Runway Video、Digital Twin |
-| 7 | 後端 / AI 測試計畫 | 尚未正式展開 |
-| 8 | 部署與展示手冊 | 手動啟動流程已完成，文件待整理 |
+| 7 | 後端 / AI 測試計畫 | 測試計畫文件、手動驗收 checklist、AI Service pytest skeleton、Laravel Feature Test skeleton 已完成 |
+| 8 | 部署與展示手冊 | 已完成 demo-deployment-guide.md 與 start-all.ps1 一鍵啟動腳本 |
 | 9 | 4 週里程碑 | 待整理 |
 | 10 | Debug 流程 | 已實際使用 |
 
@@ -680,11 +808,10 @@ php artisan migrate --path=database/migrations/指定檔案.php
 
 ### 短期下一步
 
-- 進入第 7 項：後端 / AI 測試計畫
-- 建立 Laravel Feature tests 規劃
-- 建立 AI Service pytest 規劃
-- 建立 Laravel → AI Service integration smoke test
-- 補上 Try-on / Runway Video / Digital Twin 的 `ai_jobs` 驗收 checklist
+- 進入第 9 項：4 週里程碑與驗收整理
+- 整理目前第 1 至第 8 項完成內容
+- 將後續工作分成展示前必做、可加分、可延後三類
+- 建立最後階段專題收尾計畫
 
 ### 中期目標
 
@@ -714,7 +841,9 @@ php artisan migrate --path=database/migrations/指定檔案.php
 4) 圖片上傳資料流：完整 MVP 完成
 5) Python AI 服務工程化：MVP 完成
 6) Try-on / Digital Twin / Runway Video 分層交付：L1 展示版完成
-7) 後端 / AI 測試計畫：下一步
+7) 後端 / AI 測試計畫：測試文件與 skeleton 已完成
+8) 部署與展示手冊：完成
+9) 4 週里程碑與驗收整理：下一步
 ```
 
 ---
@@ -722,5 +851,5 @@ php artisan migrate --path=database/migrations/指定檔案.php
 ## Git commit 建議
 
 ```text
-feat: complete ai l1 showcase workflows
+docs: add demo deployment guide and start script
 ```
