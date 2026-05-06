@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use App\Models\StylistHistory;
 
 class ClosetController extends Controller
 {
@@ -253,23 +254,215 @@ class ClosetController extends Controller
         ]);
     }
 
-    public function stylist(): View
-    {
-        return view('closet.stylist', [
-            'looks' => [
-                [
-                    'title' => 'City Smart Casual',
-                    'items' => ['Linen Resort Shirt', 'Ash Wide Denim', 'Black Structured Blazer'],
-                    'status' => 'degraded/mock',
-                ],
-                [
-                    'title' => 'Weekend Clean Fit',
-                    'items' => ['Soft Knit Dress', 'Light Cardigan', 'Minimal Sneakers'],
-                    'status' => 'pending',
-                ],
-            ],
-        ]);
+   public function stylist(): View
+{
+    $clothes = Clothing::where('user_id', auth()->id())
+        ->latest()
+        ->get();
+
+    $stylistHistories = StylistHistory::where('user_id', auth()->id())
+        ->latest()
+        ->limit(10)
+        ->get()
+        ->map(function (StylistHistory $history) {
+            return [
+                'id' => 'STYLE-' . str_pad((string) $history->id, 4, '0', STR_PAD_LEFT),
+                'occasion' => $history->occasion,
+                'weather' => $history->weather,
+                'style_preference' => $history->style_preference,
+                'selected_items' => $history->selected_items ?? [],
+                'recommendation' => $history->recommendation_json ?? [],
+                'status' => $history->status,
+                'mode' => $history->mode,
+                'is_accepted' => $history->is_accepted,
+                'created_at' => optional($history->created_at)->format('Y-m-d H:i:s'),
+            ];
+        });
+
+    return view('closet.stylist', [
+        'clothes' => $clothes,
+        'stylistHistories' => $stylistHistories,
+    ]);
+}
+
+
+
+   public function generateStylist(Request $request): RedirectResponse
+{
+    $validated = $request->validate([
+        'occasion' => ['required', 'string', 'max:120'],
+        'weather' => ['nullable', 'string', 'max:120'],
+        'style_preference' => ['nullable', 'string', 'max:300'],
+    ]);
+
+    $clothes = Clothing::where('user_id', auth()->id())
+        ->latest()
+        ->get();
+
+    if ($clothes->isEmpty()) {
+        return redirect()
+            ->route('closet.stylist')
+            ->with('error', '目前衣櫥尚未有衣物，請先上傳衣物後再產生 AI Stylist 推薦。');
     }
+
+    $occasion = $validated['occasion'];
+    $weather = $validated['weather'] ?? '未提供天氣';
+    $stylePreference = $validated['style_preference'] ?? '未提供風格偏好';
+
+    $occasionMatched = $clothes->filter(function (Clothing $item) use ($occasion) {
+        $occasions = collect($item->occasion ?? [])
+            ->map(fn ($value) => mb_strtolower((string) $value));
+
+        return $occasions->contains(fn ($value) => str_contains($value, mb_strtolower($occasion)));
+    });
+
+    $seasonMatched = $clothes->filter(function (Clothing $item) use ($weather) {
+        $weatherText = mb_strtolower($weather);
+
+        $targetSeasons = [];
+
+        if (str_contains($weatherText, '熱') || str_contains($weatherText, '夏') || str_contains($weatherText, 'sunny')) {
+            $targetSeasons = ['夏', '春夏', 'summer'];
+        } elseif (str_contains($weatherText, '冷') || str_contains($weatherText, '冬') || str_contains($weatherText, '寒') || str_contains($weatherText, 'cold')) {
+            $targetSeasons = ['冬', '秋冬', 'winter'];
+        } elseif (str_contains($weatherText, '雨') || str_contains($weatherText, 'rain')) {
+            $targetSeasons = ['雨天', '四季'];
+        }
+
+        if (empty($targetSeasons)) {
+            return false;
+        }
+
+        $itemSeasons = collect($item->season ?? [])
+            ->map(fn ($value) => mb_strtolower((string) $value));
+
+        return $itemSeasons->contains(function ($season) use ($targetSeasons) {
+            foreach ($targetSeasons as $target) {
+                if (str_contains($season, mb_strtolower($target))) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+    });
+
+    $styleMatched = $clothes->filter(function (Clothing $item) use ($stylePreference) {
+        $styleText = mb_strtolower($stylePreference);
+
+        if ($styleText === '未提供風格偏好') {
+            return false;
+        }
+
+        $tags = collect($item->style_tags ?? [])
+            ->map(fn ($value) => mb_strtolower((string) $value));
+
+        return $tags->contains(function ($tag) use ($styleText) {
+            return str_contains($styleText, $tag) || str_contains($tag, $styleText);
+        });
+    });
+
+    $candidateItems = $occasionMatched
+        ->merge($seasonMatched)
+        ->merge($styleMatched)
+        ->unique('id')
+        ->values();
+
+    if ($candidateItems->count() < 2) {
+        $candidateItems = $candidateItems
+            ->merge($clothes)
+            ->unique('id')
+            ->values();
+    }
+
+    $selectedItems = $candidateItems
+        ->take(3)
+        ->map(function (Clothing $item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'category' => $item->category,
+                'subcategory' => $item->subcategory,
+                'color' => $item->color,
+                'season' => $item->season ?? [],
+                'occasion' => $item->occasion ?? [],
+                'usage' => $item->usage ?? [],
+                'style_tags' => $item->style_tags ?? [],
+                'image_url' => $item->display_image_url,
+            ];
+        })
+        ->values()
+        ->all();
+
+    $mainColors = collect($selectedItems)
+        ->pluck('color')
+        ->filter()
+        ->unique()
+        ->values()
+        ->all();
+
+    $recommendation = [
+        'title' => $this->buildStylistTitle($occasion, $stylePreference),
+        'summary' => $this->buildStylistSummary($occasion, $weather, $stylePreference, $selectedItems),
+        'reasoning' => [
+            '根據你輸入的場合、天氣與風格偏好，系統會優先挑選 occasion、season、style_tags 較接近的衣物。',
+            '目前為 L1.5 / L2 基礎規則式推薦，已經會讀取你的 clothes 資料表，不只是固定假資料。',
+            '後續可接 Gemini、CLIP embedding、Digital Twin profile 與穿搭歷史，讓推薦更個人化。',
+        ],
+        'main_colors' => $mainColors,
+        'styling_tips' => [
+            '若想讓推薦更準確，建議每件衣物補上季節、場合與風格標籤。',
+            '如果推薦結果不理想，可以先回 My Closet 補齊衣物分類，或重新上傳更多衣物。',
+            '展示時可說明目前使用 rule_based 模式，未來會升級為 AI model / RAG 推薦。',
+        ],
+        'degraded_reason' => 'AI_STYLIST_RULE_BASED_MODE',
+    ];
+
+    StylistHistory::create([
+        'user_id' => auth()->id(),
+        'occasion' => $occasion,
+        'weather' => $weather,
+        'style_preference' => $stylePreference,
+        'selected_items' => $selectedItems,
+        'recommendation_json' => $recommendation,
+        'status' => 'degraded',
+        'mode' => 'rule_based',
+        'is_accepted' => false,
+    ]);
+
+    return redirect()
+        ->route('closet.stylist')
+        ->with('status', 'AI Stylist 已根據你的衣櫥資料產生穿搭建議，目前為 rule_based / degraded 模式。');
+}
+
+private function buildStylistTitle(string $occasion, string $stylePreference): string
+{
+    if ($stylePreference !== '未提供風格偏好') {
+        return $occasion . ' × ' . $stylePreference . ' 穿搭建議';
+    }
+
+    return $occasion . ' 穿搭建議';
+}
+
+private function buildStylistSummary(string $occasion, string $weather, string $stylePreference, array $selectedItems): string
+{
+    $itemNames = collect($selectedItems)
+        ->pluck('name')
+        ->filter()
+        ->implode('、');
+
+    if ($itemNames === '') {
+        $itemNames = '目前衣櫥中的可用衣物';
+    }
+
+    return sprintf(
+        '這套建議以「%s」為主要場合，參考天氣「%s」與風格偏好「%s」，從你的衣櫥中挑選出：%s。',
+        $occasion,
+        $weather,
+        $stylePreference,
+        $itemNames
+    );
+}
 
    public function tryOn(): View
 {

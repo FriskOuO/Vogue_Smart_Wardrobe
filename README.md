@@ -46,7 +46,7 @@ Vogue Smart Wardrobe 是一個以 Laravel + Blade + Vite + Tailwind 建置的智
 | 儲存提交 | `closet.store` | 已接正式後端流程 |
 | 衣物詳細 | `closet.show` | 已顯示 DB 與 AI 分析結果 |
 | AI Search | `closet.search` | 已支援以文搜圖 / fallback 搜尋 |
-| AI Stylist | `closet.stylist` | 前端頁已建立，後續接推薦流程 |
+| AI Stylist | `closet.stylist` | 已完成 L1.5 / L2 基礎版，可從 clothes 產生 rule_based 推薦並寫入 stylist_history |
 | Try-On / Pose | `closet.tryon` | 已完成 Try-on L1 任務流程，可建立 pose job |
 
 目前已確認新增衣物表單欄位：
@@ -672,6 +672,93 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 ---
 
+### 22) 已完成 AI Stylist L1.5 / L2 基礎版
+
+目前 AI Stylist 已從原本的展示頁，升級為可操作、可寫入資料庫、可讀取衣櫥資料的穿搭推薦流程。
+
+已完成流程：
+
+```text
+SmartCloset Hub / AI Stylist
+→ 使用者輸入場合、天氣、風格偏好
+→ Laravel 讀取目前使用者的 clothes 資料
+→ 依照 occasion / season / style_tags 進行 rule_based 推薦
+→ 產生推薦標題、摘要、推薦理由與 styling tips
+→ 寫入 stylist_history
+→ 回到 AI Stylist 頁面顯示推薦紀錄
+```
+
+已新增資料表：
+
+```text
+stylist_history
+```
+
+已新增 Model：
+
+```text
+app/Models/StylistHistory.php
+```
+
+已新增 / 更新功能：
+
+- `GET /closet/stylist`
+- `POST /closet/stylist`
+- `closet.stylist`
+- `closet.stylist.generate`
+- `ClosetController@stylist`
+- `ClosetController@generateStylist`
+- `resources/views/closet/stylist.blade.php`
+
+目前推薦模式：
+
+```text
+status = degraded
+mode = rule_based
+```
+
+目前代表：
+
+```text
+AI Stylist 已不是單純靜態展示頁，而是會讀取使用者自己的衣櫥資料，產生可保存的穿搭推薦紀錄。
+```
+
+目前仍屬 L1.5 / L2 基礎版，尚未接 Gemini、CLIP embedding、Digital Twin profile 或 RAG 個人化記憶。
+
+後續可補強：
+
+```text
+1. 根據 Digital Twin profile 調整推薦
+2. 根據穿搭接受 / 拒絕紀錄學習偏好
+3. 根據 ai_embeddings 做相似風格推薦
+4. 串接 Gemini 產生更自然的推薦說明
+5. 加入 weather API 與場合權重
+```
+
+已新增 Feature Test：
+
+```text
+tests/Feature/AiStylistTest.php
+```
+
+測試涵蓋：
+
+```text
+1. 未登入不可進入 AI Stylist
+2. 登入後可進入 AI Stylist
+3. 沒有衣物時不可產生推薦
+4. 有衣物時可建立 stylist_history
+5. 使用者只能看到自己的推薦紀錄
+```
+
+測試指令：
+
+```powershell
+php artisan test tests/Feature/AiStylistTest.php
+```
+
+---
+
 ## 目前 10 大步驟進度
 
 | 編號 | 項目 | 狀態 |
@@ -684,8 +771,8 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 | 6 | Try-on / Digital Twin / Runway Video 分層交付 | L1 展示版已完成，包含 Try-on、Runway Video、Digital Twin |
 | 7 | 後端 / AI 測試計畫 | 測試計畫文件、手動驗收 checklist、AI Service pytest skeleton、Laravel Feature Test skeleton 已完成 |
 | 8 | 部署與展示手冊 | 已完成 demo-deployment-guide.md 與 start-all.ps1 一鍵啟動腳本 |
-| 9 | 4 週里程碑 | 待整理 |
-| 10 | Debug 流程 | 已實際使用 |
+| 9 | 4 週里程碑 | 已完成 four-week-milestone-and-acceptance.md 與後續開發完整提示詞 |
+| 10 | Debug 流程與功能完整性補強 | 已進入功能補強階段，AI Stylist L1.5 / L2 基礎版已完成 |
 
 ---
 
@@ -808,17 +895,17 @@ php artisan migrate --path=database/migrations/指定檔案.php
 
 ### 短期下一步
 
-- 進入第 9 項：4 週里程碑與驗收整理
-- 整理目前第 1 至第 8 項完成內容
-- 將後續工作分成展示前必做、可加分、可延後三類
-- 建立最後階段專題收尾計畫
+- 繼續第 10 項：功能完整性補強
+- 下一個建議補強 Digital Twin L2，讓系統可從 clothes 統計使用者風格
+- 將 Digital Twin L2 的風格摘要提供給 AI Stylist 使用
+- 後續再補 Try-on L2、Runway Video L2、Trend / Chat L1
 
 ### 中期目標
 
-- 串接 `closet.stylist`
+- 將 AI Stylist 從 rule_based 推薦升級為結合 Digital Twin profile 的個人化推薦
 - 使用 `ai_embeddings` 作為 AI Stylist 候選衣物資料
 - 補上 wear_logs / outfit_logs
-- 加入穿搭紀錄與 RAG 記憶基礎
+- 加入穿搭接受 / 拒絕紀錄與 RAG 記憶基礎
 
 ### 後期擴充
 
@@ -843,7 +930,14 @@ php artisan migrate --path=database/migrations/指定檔案.php
 6) Try-on / Digital Twin / Runway Video 分層交付：L1 展示版完成
 7) 後端 / AI 測試計畫：測試文件與 skeleton 已完成
 8) 部署與展示手冊：完成
-9) 4 週里程碑與驗收整理：下一步
+9) 4 週里程碑與驗收整理：完成
+10) 功能完整性補強：AI Stylist L1.5 / L2 基礎版完成
+```
+
+目前下一步建議：
+
+```text
+Digital Twin L2：從衣櫥資料統計使用者風格，並提供給 AI Stylist 作為推薦依據。
 ```
 
 ---
@@ -851,5 +945,5 @@ php artisan migrate --path=database/migrations/指定檔案.php
 ## Git commit 建議
 
 ```text
-docs: add demo deployment guide and start script
+feat: add rule based ai stylist recommendation
 ```

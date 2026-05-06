@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/closet/create', [ClosetController::class, 'create'])->name('closet.create');
     Route::get('/closet/ai-search', [ClosetController::class, 'search'])->name('closet.search');
     Route::get('/closet/stylist', [ClosetController::class, 'stylist'])->name('closet.stylist');
+    Route::post('/closet/stylist', [ClosetController::class, 'generateStylist'])   ->name('closet.stylist.generate');
     Route::get('/closet/try-on', [ClosetController::class, 'tryOn'])->name('closet.tryon');
     Route::post('/closet/try-on', [ClosetController::class, 'storeTryOn'])->name('closet.tryon.store');
     Route::post('/closet', [ClosetController::class, 'store'])->name('closet.store');
