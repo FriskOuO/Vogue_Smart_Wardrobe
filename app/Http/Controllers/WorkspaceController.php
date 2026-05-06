@@ -20,7 +20,7 @@ class WorkspaceController extends Controller
 
     $clothes = collect();
     $runwayJobs = collect();
-    
+    $digitalTwinJobs = collect();
 
     if ($module === 'runway-video') {
         $clothes = Clothing::where('user_id', auth()->id())
@@ -48,7 +48,7 @@ class WorkspaceController extends Controller
     }
     if ($module === 'digital-twin') {
     $digitalTwinJobs = AiJob::where('user_id', auth()->id())
-        ->where('job_type', 'digital_twin')
+        ->whereIn('job_type', ['digital_twin', 'digital_twin_style_analysis'])
         ->latest()
         ->limit(10)
         ->get()
@@ -232,6 +232,153 @@ class WorkspaceController extends Controller
     return redirect()
         ->route('workspace.show', 'digital-twin')
         ->with('status', 'Digital Twin L1 個人風格卡已建立，目前為 mock / degraded 展示模式。');
+}
+
+    public function analyzeDigitalTwinCloset(): RedirectResponse
+{
+    $clothes = Clothing::where('user_id', auth()->id())
+        ->latest()
+        ->get();
+
+    if ($clothes->isEmpty()) {
+        return redirect()
+            ->route('workspace.show', 'digital-twin')
+            ->with('error', '目前衣櫥尚未有衣物，請先上傳衣物後再進行 Digital Twin L2 衣櫥風格分析。');
+    }
+
+    $categoryCounts = $this->countClothingField($clothes, 'category');
+    $colorCounts = $this->countClothingField($clothes, 'color');
+    $seasonCounts = $this->countClothingArrayField($clothes, 'season');
+    $occasionCounts = $this->countClothingArrayField($clothes, 'occasion');
+    $styleTagCounts = $this->countClothingArrayField($clothes, 'style_tags');
+
+    $topCategories = $this->topCountItems($categoryCounts);
+    $topColors = $this->topCountItems($colorCounts);
+    $topSeasons = $this->topCountItems($seasonCounts);
+    $topOccasions = $this->topCountItems($occasionCounts);
+    $topStyleTags = $this->topCountItems($styleTagCounts);
+
+    $dominantCategory = $topCategories[0]['label'] ?? '未分類';
+    $dominantColor = $topColors[0]['label'] ?? '未設定顏色';
+    $dominantOccasion = $topOccasions[0]['label'] ?? '日常';
+    $dominantStyle = $topStyleTags[0]['label'] ?? '尚未建立風格標籤';
+
+    $profile = [
+        'title' => 'Digital Twin L2 Closet Style Analysis',
+        'avatar' => [
+            'type' => 'closet_profile',
+            'label' => 'VogueAI Closet-Based Digital Twin',
+            'image_url' => null,
+        ],
+        'profile' => [
+            'source' => 'clothes',
+            'total_items' => $clothes->count(),
+            'dominant_category' => $dominantCategory,
+            'dominant_color' => $dominantColor,
+            'dominant_occasion' => $dominantOccasion,
+            'dominant_style' => $dominantStyle,
+        ],
+        'style_summary' => [
+            'headline' => '根據衣櫥資料建立的 Digital Twin L2 風格摘要',
+            'description' => sprintf(
+                '系統分析了你目前衣櫥中的 %d 件衣物，發現你最常出現的類別是「%s」，主要顏色是「%s」，常見場合偏向「%s」，整體風格可歸納為「%s」。',
+                $clothes->count(),
+                $dominantCategory,
+                $dominantColor,
+                $dominantOccasion,
+                $dominantStyle
+            ),
+            'recommended_direction' => [
+                '可將此風格摘要提供給 AI Stylist，讓穿搭推薦更貼近使用者真實衣櫥。',
+                '若想讓分析更準確，建議補齊每件衣物的季節、場合與 style_tags。',
+                '後續可加入穿搭接受 / 拒絕紀錄，讓 Digital Twin 逐步學習個人偏好。',
+            ],
+        ],
+        'closet_statistics' => [
+            'top_categories' => $topCategories,
+            'top_colors' => $topColors,
+            'top_seasons' => $topSeasons,
+            'top_occasions' => $topOccasions,
+            'top_style_tags' => $topStyleTags,
+        ],
+        'style_tags' => collect([
+            $dominantCategory,
+            $dominantColor,
+            $dominantOccasion,
+            $dominantStyle,
+            'Digital Twin L2',
+            'closet analysis',
+        ])->filter()->unique()->values()->all(),
+        'degraded_reason' => 'DIGITAL_TWIN_RULE_BASED_CLOSET_ANALYSIS',
+        'message' => '目前為 Digital Twin L2 衣櫥統計分析模式，尚未接入真實 3D Avatar 或生成式模型。',
+    ];
+
+    AiJob::create([
+        'user_id' => auth()->id(),
+        'clothing_id' => null,
+        'job_type' => 'digital_twin_style_analysis',
+        'status' => 'degraded',
+        'mode' => 'rule_based',
+        'request_id' => 'digital_twin_l2_' . now()->format('YmdHis') . '_' . uniqid(),
+        'input_json' => [
+            'source' => 'clothes',
+            'total_items' => $clothes->count(),
+        ],
+        'result_json' => $profile,
+        'degraded_reason' => 'DIGITAL_TWIN_RULE_BASED_CLOSET_ANALYSIS',
+        'error_code' => null,
+        'error_message' => null,
+        'started_at' => now(),
+        'completed_at' => now(),
+    ]);
+
+    return redirect()
+        ->route('workspace.show', 'digital-twin')
+        ->with('status', 'Digital Twin L2 已根據你的衣櫥資料產生風格分析，目前為 rule_based / degraded 模式。');
+}
+
+    private function countClothingField($clothes, string $field): array
+{
+    return $clothes
+        ->pluck($field)
+        ->filter()
+        ->map(fn ($value) => trim((string) $value))
+        ->filter()
+        ->countBy()
+        ->sortDesc()
+        ->all();
+}
+
+private function countClothingArrayField($clothes, string $field): array
+{
+    return $clothes
+        ->flatMap(function (Clothing $item) use ($field) {
+            $values = $item->{$field} ?? [];
+
+            if (is_string($values)) {
+                $decoded = json_decode($values, true);
+                $values = is_array($decoded) ? $decoded : [$values];
+            }
+
+            return collect($values)
+                ->map(fn ($value) => trim((string) $value))
+                ->filter();
+        })
+        ->countBy()
+        ->sortDesc()
+        ->all();
+}
+
+private function topCountItems(array $counts, int $limit = 5): array
+{
+    return collect($counts)
+        ->take($limit)
+        ->map(fn ($count, $label) => [
+            'label' => (string) $label,
+            'count' => (int) $count,
+        ])
+        ->values()
+        ->all();
 }
 
     /**

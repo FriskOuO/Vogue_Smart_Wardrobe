@@ -47,5 +47,6 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 });
 Route::post('/workspace/digital-twin', [WorkspaceController::class, 'storeDigitalTwin'])
     ->name('workspace.digital-twin.store');
-
+Route::post('/workspace/digital-twin/analyze-closet', [WorkspaceController::class, 'analyzeDigitalTwinCloset'])
+    ->name('workspace.digital-twin.analyze-closet');
 require __DIR__.'/auth.php';

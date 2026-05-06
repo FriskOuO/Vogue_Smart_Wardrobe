@@ -294,6 +294,21 @@
                             建立 Digital Twin Profile
                         </button>
                     </form>
+                    <div class="vogue-card mt-4" style="border-color: rgba(34, 197, 94, 0.45);">
+                    <h3>Digital Twin L2 衣櫥風格分析</h3>
+                    <p class="mt-1" style="color: var(--vogue-ink-soft);">
+                        L2 階段會讀取你的 My Closet 資料，統計常見類別、顏色、季節、場合與風格標籤，
+                        建立 closet-based Digital Twin，後續可提供給 AI Stylist 做個人化推薦。
+                    </p>
+
+                    <form method="POST" action="{{ route('workspace.digital-twin.analyze-closet') }}" class="mt-4">
+                        @csrf
+
+                        <button type="submit" class="vogue-btn vogue-btn-solid">
+                            從衣櫥分析 Digital Twin L2
+                        </button>
+                    </form>
+                </div>
                 </article>
 
                 <article class="vogue-card">
@@ -314,6 +329,7 @@
                                 $profile = $result['profile'] ?? [];
                                 $styleSummary = $result['style_summary'] ?? [];
                                 $styleTags = $result['style_tags'] ?? [];
+                                $closetStatistics = $result['closet_statistics'] ?? [];
                             @endphp
 
                             <div class="vogue-card" style="padding: 0.9rem;">
@@ -393,6 +409,34 @@
                                     </div>
                                 @endif
 
+                                @if (!empty($closetStatistics))
+                                    <div class="mt-3">
+                                        <p class="vogue-label">Closet Statistics</p>
+
+                                        <div class="mt-2 grid gap-3 sm:grid-cols-2">
+                                            @foreach ([
+                                                'top_categories' => '常見類別',
+                                                'top_colors' => '常見顏色',
+                                                'top_seasons' => '常見季節',
+                                                'top_occasions' => '常見場合',
+                                                'top_style_tags' => '常見風格標籤',
+                                            ] as $key => $label)
+                                                @if (!empty($closetStatistics[$key]))
+                                                    <div class="vogue-card" style="padding: 0.75rem;">
+                                                        <p class="vogue-label">{{ $label }}</p>
+                                                        <div class="mt-2 flex flex-wrap gap-2">
+                                                            @foreach ($closetStatistics[$key] as $stat)
+                                                                <span class="vogue-chip">
+                                                                    {{ $stat['label'] }} × {{ $stat['count'] }}
+                                                                </span>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                                 @if (!empty($styleTags))
                                     <div class="mt-3 flex flex-wrap gap-2">
                                         @foreach ($styleTags as $tag)
