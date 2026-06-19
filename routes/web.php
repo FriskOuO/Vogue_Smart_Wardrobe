@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\AiJobController;
 use App\Http\Controllers\ClosetController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\ProfileController;
@@ -10,6 +11,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('home');
 });
+
+Route::view('/privacy', 'legal.privacy')->name('legal.privacy');
+Route::view('/terms', 'legal.terms')->name('legal.terms');
+Route::view('/acceptable-use', 'legal.acceptable-use')->name('legal.acceptable-use');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -31,22 +36,30 @@ Route::middleware('auth')->group(function () {
     Route::get('/closet/ai-search', [ClosetController::class, 'search'])->name('closet.search');
     Route::get('/closet/stylist', [ClosetController::class, 'stylist'])->name('closet.stylist');
     Route::post('/closet/stylist', [ClosetController::class, 'generateStylist'])   ->name('closet.stylist.generate');
+    Route::post('/closet/stylist/{history}/feedback', [ClosetController::class, 'updateStylistFeedback'])
+        ->name('closet.stylist.feedback');
+    Route::post('/closet/stylist/{history}/outfit-log', [ClosetController::class, 'storeStylistOutfitLog'])
+        ->name('closet.stylist.outfit-log');
     Route::get('/closet/try-on', [ClosetController::class, 'tryOn'])->name('closet.tryon');
     Route::post('/closet/try-on', [ClosetController::class, 'storeTryOn'])->name('closet.tryon.store');
     Route::post('/closet', [ClosetController::class, 'store'])->name('closet.store');
     Route::get('/closet/{id}', [ClosetController::class, 'show'])->name('closet.show');
+    Route::post('/closet/{id}/wear', [ClosetController::class, 'storeWearLog'])->name('closet.wear.store');
     Route::post('/closet/{id}/reanalyze', [ClosetController::class, 'reanalyze'])->name('closet.reanalyze');
     Route::post('/closet/{id}/reembed', [ClosetController::class, 'reembed'])->name('closet.reembed');
     Route::post('/workspace/runway-video', [WorkspaceController::class, 'storeRunwayVideo'])
     ->name('workspace.runway-video.store');
+    Route::post('/workspace/digital-twin', [WorkspaceController::class, 'storeDigitalTwin'])
+        ->name('workspace.digital-twin.store');
+    Route::post('/workspace/digital-twin/analyze-closet', [WorkspaceController::class, 'analyzeDigitalTwinCloset'])
+        ->name('workspace.digital-twin.analyze-closet');
+    Route::get('/ai-jobs/{job}', [AiJobController::class, 'show'])->name('ai-jobs.show');
+    Route::post('/ai-jobs/{job}/retry', [AiJobController::class, 'retry'])->name('ai-jobs.retry');
+    Route::post('/ai-jobs/{job}/tryon-status', [AiJobController::class, 'refreshTryOnStatus'])->name('ai-jobs.tryon-status');
     Route::get('/workspace/{module}', [WorkspaceController::class, 'show'])->name('workspace.show');
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('users', UserManagementController::class);
 });
-Route::post('/workspace/digital-twin', [WorkspaceController::class, 'storeDigitalTwin'])
-    ->name('workspace.digital-twin.store');
-Route::post('/workspace/digital-twin/analyze-closet', [WorkspaceController::class, 'analyzeDigitalTwinCloset'])
-    ->name('workspace.digital-twin.analyze-closet');
 require __DIR__.'/auth.php';

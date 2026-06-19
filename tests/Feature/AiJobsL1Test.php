@@ -5,7 +5,10 @@ namespace Tests\Feature;
 use App\Models\AiJob;
 use App\Models\Clothing;
 use App\Models\User;
+use App\Services\AiService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AiJobsL1Test extends TestCase
@@ -28,7 +31,172 @@ class AiJobsL1Test extends TestCase
         $response = $this->actingAs($user)->get('/closet/try-on');
 
         $response->assertStatus(200);
-        $response->assertSee('Virtual Try-on L1');
+        $response->assertSee('虛擬試穿');
+    }
+
+    public function test_tryon_l2_creates_pose_quality_job(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'role' => 'user',
+        ]);
+
+        $clothing = Clothing::create([
+            'user_id' => $user->id,
+            'name' => 'Try-on Test Jacket',
+            'image_path' => 'clothes/tryon-test-jacket.jpg',
+            'image_url' => '/storage/clothes/tryon-test-jacket.jpg',
+            'category' => 'outerwear',
+            'color' => 'black',
+            'ai_status' => 'degraded',
+            'ai_mode' => 'mock',
+        ]);
+
+        $this->mock(AiService::class, function ($mock): void {
+            $mock->shouldReceive('analyzePose')
+                ->once()
+                ->andReturn([
+                    'schema_version' => 'v1',
+                    'request_id' => 'pose-test-request',
+                    'status' => 'degraded',
+                    'mode' => 'mock',
+                    'degraded_reason' => 'MOCK_POSE_ENABLED',
+                    'pose_model' => 'mock-pose',
+                    'pose_quality_score' => 0.86,
+                    'pose_quality_status' => 'usable',
+                    'quality_checks' => [
+                        'full_body_visible' => [
+                            'passed' => true,
+                            'message' => 'Full-body framing is usable for Try-on L2.',
+                        ],
+                        'shoulders_detected' => [
+                            'passed' => true,
+                            'message' => 'Both shoulder keypoints are available.',
+                        ],
+                    ],
+                    'keypoints' => [
+                        ['name' => 'left_shoulder', 'x' => 410, 'y' => 390, 'confidence' => 0.70],
+                        ['name' => 'right_shoulder', 'x' => 670, 'y' => 398, 'confidence' => 0.70],
+                    ],
+                    'pose_analysis' => [
+                        'full_body_visible' => true,
+                        'shoulder_balance' => 'balanced',
+                        'pose_quality_score' => 0.86,
+                        'pose_quality_status' => 'usable',
+                        'improvement_tips' => [
+                            'Use a straight full-body photo with both shoulders and hips visible.',
+                        ],
+                        'fit_notes' => [
+                            'Image is usable for Try-on L2 preview and Magic Mirror analysis.',
+                        ],
+                    ],
+                ]);
+        });
+
+        $response = $this->actingAs($user)->post(route('closet.tryon.store'), [
+            'clothing_id' => $clothing->id,
+            'person_photo' => UploadedFile::fake()->createWithContent(
+                'person.png',
+                base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/l3vWJwAAAABJRU5ErkJggg==')
+            ),
+        ]);
+
+        $response->assertRedirect(route('closet.tryon'));
+        $response->assertSessionHas('status', '試穿 L1 姿態任務已完成，可人工驗收：姿態品質 usable / 86%。');
+
+        $this->assertDatabaseHas('ai_jobs', [
+            'user_id' => $user->id,
+            'clothing_id' => $clothing->id,
+            'job_type' => 'pose_analysis',
+            'status' => 'degraded',
+            'mode' => 'mock',
+            'request_id' => 'pose-test-request',
+        ]);
+
+        $job = AiJob::where('job_type', 'pose_analysis')->latest()->first();
+
+        $this->assertNotNull($job);
+        $this->assertSame(0.86, $job->result_json['pose_quality_score']);
+        $this->assertSame('usable', $job->result_json['pose_quality_status']);
+        $this->assertTrue($job->result_json['quality_checks']['full_body_visible']['passed']);
+        $this->assertSame(
+            'Use a straight full-body photo with both shoulders and hips visible.',
+            $job->result_json['pose_analysis']['improvement_tips'][0]
+        );
+
+        $page = $this->actingAs($user)->get(route('closet.tryon'));
+
+        $page->assertOk();
+        $page->assertSee('最新任務');
+        $page->assertSee('最新任務可人工驗收');
+        $page->assertSee('姿態品質');
+        $page->assertSee('86%');
+        $page->assertSee('品質檢查');
+        $page->assertSee('改善建議');
+    }
+
+    public function test_tryon_l1_failed_ai_service_job_is_visible_as_latest_failure(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'role' => 'user',
+        ]);
+
+        $clothing = Clothing::create([
+            'user_id' => $user->id,
+            'name' => 'Try-on Failed Jacket',
+            'image_path' => 'clothes/tryon-failed-jacket.jpg',
+            'image_url' => '/storage/clothes/tryon-failed-jacket.jpg',
+            'category' => 'outerwear',
+            'color' => 'black',
+            'ai_status' => 'degraded',
+            'ai_mode' => 'mock',
+        ]);
+
+        $this->mock(AiService::class, function ($mock): void {
+            $mock->shouldReceive('analyzePose')
+                ->once()
+                ->andReturn([
+                    'schema_version' => 'v1',
+                    'request_id' => 'pose-service-down-request',
+                    'status' => 'failed',
+                    'error' => [
+                        'code' => 'AI_SERVICE_UNAVAILABLE',
+                        'message' => '無法連線到 AI Service',
+                    ],
+                ]);
+        });
+
+        $response = $this->actingAs($user)->post(route('closet.tryon.store'), [
+            'clothing_id' => $clothing->id,
+            'person_photo' => UploadedFile::fake()->createWithContent(
+                'person.png',
+                base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/l3vWJwAAAABJRU5ErkJggg==')
+            ),
+        ]);
+
+        $response->assertRedirect(route('closet.tryon'));
+        $response->assertSessionHas('status', '試穿 L1 任務失敗，已記錄錯誤。');
+
+        $this->assertDatabaseHas('ai_jobs', [
+            'user_id' => $user->id,
+            'clothing_id' => $clothing->id,
+            'job_type' => 'pose_analysis',
+            'status' => 'failed',
+            'request_id' => 'pose-service-down-request',
+            'error_code' => 'AI_SERVICE_UNAVAILABLE',
+            'error_message' => '無法連線到 AI Service',
+        ]);
+
+        $page = $this->actingAs($user)->get(route('closet.tryon'));
+
+        $page->assertOk();
+        $page->assertSee('最新任務');
+        $page->assertSee('最新任務失敗');
+        $page->assertSee('無法連線到 AI Service');
+        $page->assertSee('AI_SERVICE_UNAVAILABLE');
     }
 
     public function test_authenticated_user_can_access_runway_video_workspace(): void
@@ -40,7 +208,7 @@ class AiJobsL1Test extends TestCase
         $response = $this->actingAs($user)->get('/workspace/runway-video');
 
         $response->assertStatus(200);
-        $response->assertSee('Runway Video');
+        $response->assertSee('伸展台影片');
     }
 
     public function test_authenticated_user_can_access_digital_twin_workspace(): void
@@ -52,10 +220,28 @@ class AiJobsL1Test extends TestCase
         $response = $this->actingAs($user)->get('/workspace/digital-twin');
 
         $response->assertStatus(200);
-        $response->assertSee('Digital Twin');
+        $response->assertSee('數位分身');
     }
 
-    public function test_runway_video_l1_creates_ai_job(): void
+    public function test_guest_cannot_create_digital_twin_job(): void
+    {
+        $response = $this->post(route('workspace.digital-twin.store'), [
+            'height_cm' => 170,
+            'style_preference' => 'minimal',
+            'common_occasion' => 'daily',
+        ]);
+
+        $response->assertRedirect('/login');
+    }
+
+    public function test_guest_cannot_analyze_digital_twin_closet(): void
+    {
+        $response = $this->post(route('workspace.digital-twin.analyze-closet'));
+
+        $response->assertRedirect('/login');
+    }
+
+    public function test_runway_video_l2_creates_preview_job(): void
     {
         $user = User::factory()->create([
             'role' => 'user',
@@ -79,6 +265,7 @@ class AiJobsL1Test extends TestCase
         ]);
 
         $response->assertRedirect(route('workspace.show', 'runway-video'));
+        $response->assertSessionHas('status', '伸展台影片 L2 預覽任務已建立，可人工驗收：預覽狀態 ready / 9:16。');
 
         $this->assertDatabaseHas('ai_jobs', [
             'user_id' => $user->id,
@@ -93,7 +280,27 @@ class AiJobsL1Test extends TestCase
         $this->assertNotNull($job);
         $this->assertIsArray($job->result_json);
         $this->assertArrayHasKey('prompt', $job->result_json);
+        $this->assertArrayHasKey('video_prompt', $job->result_json);
+        $this->assertArrayHasKey('preview', $job->result_json);
+        $this->assertArrayHasKey('provider', $job->result_json);
+        $this->assertArrayHasKey('scene_timeline', $job->result_json);
         $this->assertArrayHasKey('scenes', $job->result_json);
+        $this->assertSame('degraded_placeholder', $job->result_json['generation_status']);
+        $this->assertSame('ready', $job->result_json['preview']['status']);
+        $this->assertSame('9:16', $job->result_json['preview']['aspect_ratio']);
+        $this->assertSame('veo', $job->result_json['provider']['target_provider']);
+        $this->assertFalse($job->result_json['provider']['connected']);
+
+        $page = $this->actingAs($user)->get(route('workspace.show', 'runway-video'));
+
+        $page->assertOk();
+        $page->assertSee('最新任務');
+        $page->assertSee('最新伸展台任務可人工驗收');
+        $page->assertSee('預覽狀態 ready');
+        $page->assertSee('生成狀態');
+        $page->assertSee('影片預覽');
+        $page->assertSee('影片提示詞');
+        $page->assertSee('degraded_placeholder');
     }
 
     public function test_digital_twin_l1_creates_ai_job(): void
@@ -110,6 +317,7 @@ class AiJobsL1Test extends TestCase
         ]);
 
         $response->assertRedirect(route('workspace.show', 'digital-twin'));
+        $response->assertSessionHas('status', '數位分身 L1 風格資料已建立，可人工驗收：fallback profile / degraded。');
 
         $this->assertDatabaseHas('ai_jobs', [
             'user_id' => $user->id,
@@ -125,6 +333,13 @@ class AiJobsL1Test extends TestCase
         $this->assertArrayHasKey('profile', $job->result_json);
         $this->assertArrayHasKey('style_summary', $job->result_json);
         $this->assertArrayHasKey('style_tags', $job->result_json);
+
+        $page = $this->actingAs($user)->get(route('workspace.show', 'digital-twin'));
+
+        $page->assertOk();
+        $page->assertSee('最新任務');
+        $page->assertSee('最新數位分身任務可人工驗收');
+        $page->assertSee('分身預覽佔位');
     }
 
     public function test_digital_twin_l2_requires_clothing_items(): void
@@ -185,7 +400,7 @@ class AiJobsL1Test extends TestCase
         $response = $this->actingAs($user)->post(route('workspace.digital-twin.analyze-closet'));
 
         $response->assertRedirect(route('workspace.show', 'digital-twin'));
-        $response->assertSessionHas('status');
+        $response->assertSessionHas('status', '數位分身 L2 衣櫥風格分析已建立，可人工驗收：rule_based / degraded。');
 
         $this->assertDatabaseHas('ai_jobs', [
             'user_id' => $user->id,
@@ -203,6 +418,13 @@ class AiJobsL1Test extends TestCase
         $this->assertArrayHasKey('top_colors', $job->result_json['closet_statistics']);
         $this->assertArrayHasKey('top_style_tags', $job->result_json['closet_statistics']);
         $this->assertEquals('上衣', $job->result_json['closet_statistics']['top_categories'][0]['label']);
+
+        $page = $this->actingAs($user)->get(route('workspace.show', 'digital-twin'));
+
+        $page->assertOk();
+        $page->assertSee('最新任務');
+        $page->assertSee('最新數位分身任務可人工驗收');
+        $page->assertSee('衣櫥統計');
     }
 
     public function test_digital_twin_l2_only_uses_current_users_clothes(): void

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AiJob;
 use App\Models\Clothing;
+use App\Services\ExternalModelProviderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -74,7 +75,7 @@ class WorkspaceController extends Controller
     ]);
 }
 
-    public function storeRunwayVideo(Request $request): RedirectResponse
+    public function storeRunwayVideo(Request $request, ExternalModelProviderService $externalModelProvider): RedirectResponse
 {
     $validated = $request->validate([
         'clothing_id' => ['required', 'integer'],
@@ -85,8 +86,17 @@ class WorkspaceController extends Controller
     $clothing = Clothing::where('user_id', auth()->id())
         ->findOrFail($validated['clothing_id']);
 
+    $cameraRhythm = $validated['camera_rhythm'] ?? '平順伸展台';
+    $videoPrompt = sprintf(
+        '產生一支 %s 風格的伸展台影片，以 %s 為主角，色彩重點為 %s，鏡頭節奏為 %s。請使用直式時尚編輯構圖、乾淨光線與以單品細節為主的鏡頭。',
+        $validated['video_style'],
+        $clothing->name,
+        $clothing->color ?? 'neutral',
+        $cameraRhythm
+    );
+
     $storyboard = [
-        'title' => 'Runway Video L1 Storyboard',
+        'title' => '伸展台影片 L1 Storyboard',
         'clothing' => [
             'id' => $clothing->id,
             'name' => $clothing->name,
@@ -95,7 +105,7 @@ class WorkspaceController extends Controller
             'image_url' => $clothing->display_image_url,
         ],
         'video_style' => $validated['video_style'],
-        'camera_rhythm' => $validated['camera_rhythm'] ?? 'smooth fashion runway',
+        'camera_rhythm' => $validated['camera_rhythm'] ?? '平順伸展台',
         'scenes' => [
             [
                 'scene' => 1,
@@ -113,7 +123,7 @@ class WorkspaceController extends Controller
             ],
             [
                 'scene' => 3,
-                'title' => 'Detail Focus',
+                'title' => '細節特寫',
                 'description' => '鏡頭靠近衣物細節，呈現材質、紋理與搭配亮點。',
                 'camera' => 'close-up',
                 'duration_seconds' => 3,
@@ -127,27 +137,82 @@ class WorkspaceController extends Controller
             ],
         ],
         'prompt' => sprintf(
-            'Create a %s fashion runway video featuring %s, color %s, with %s camera rhythm.',
+            '產生一支 %s 風格的伸展台影片，以 %s 為主角，色彩重點為 %s，鏡頭節奏為 %s。',
             $validated['video_style'],
             $clothing->name,
             $clothing->color ?? 'neutral',
             $validated['camera_rhythm'] ?? 'smooth'
         ),
         'degraded_reason' => 'RUNWAY_VIDEO_API_NOT_CONNECTED',
-        'message' => '目前為 Runway Video L1 Storyboard 展示模式，尚未接入真實影片生成 API。',
+        'message' => '目前為伸展台影片 L1 Storyboard 安全備援狀態，真實影片生成 API 可在正式 provider 設定後啟用。',
     ];
+
+    $storyboard['title'] = '伸展台影片 L2 預覽任務';
+    $storyboard['camera_rhythm'] = $cameraRhythm;
+    $storyboard['generation_status'] = 'degraded_placeholder';
+    $storyboard['pipeline_stage'] = 'preview_ready';
+    $storyboard['provider'] = [
+        'name' => 'fallback-runway-adapter',
+        'target_provider' => 'veo',
+        'connected' => false,
+    ];
+    $storyboard['preview'] = [
+        'type' => 'placeholder',
+        'status' => 'ready',
+        'label' => '模擬伸展台影片預覽',
+        'poster_url' => $clothing->display_image_url,
+        'video_url' => null,
+        'duration_seconds' => collect($storyboard['scenes'] ?? [])->sum('duration_seconds'),
+        'aspect_ratio' => '9:16',
+    ];
+    $storyboard['scene_timeline'] = $storyboard['scenes'] ?? [];
+    $storyboard['prompt'] = $videoPrompt;
+    $storyboard['video_prompt'] = $videoPrompt;
+    $storyboard['export'] = [
+        'format' => 'mp4',
+        'resolution' => '1080x1920',
+        'status' => 'not_generated',
+    ];
+    $storyboard['next_steps'] = [
+        '接上真實影片服務轉接器。',
+        '用服務回傳的 video_url 取代佔位預覽。',
+        '保存服務任務 id 與輪詢狀態。',
+    ];
+    $storyboard['message'] = '伸展台影片 L2 目前使用預覽狀態，真實影片服務可在 provider 完成後啟用。';
+    $storyboard['provider_attempt'] = $externalModelProvider->generateVideo([
+        'request_id' => 'runway_l1_' . now()->format('YmdHis') . '_' . uniqid(),
+        'user_id' => auth()->id(),
+        'clothing_id' => $clothing->id,
+        'image_url' => $clothing->display_image_url,
+        'prompt' => $videoPrompt,
+        'aspect_ratio' => '9:16',
+        'duration_seconds' => collect($storyboard['scenes'] ?? [])->sum('duration_seconds'),
+        'scene_timeline' => $storyboard['scenes'] ?? [],
+    ]);
+
+    if (($storyboard['provider_attempt']['status'] ?? null) === 'ready') {
+        $storyboard['generation_status'] = 'ready';
+        $storyboard['pipeline_stage'] = 'provider_submitted';
+        $storyboard['provider']['name'] = $storyboard['provider_attempt']['provider'];
+        $storyboard['provider']['connected'] = true;
+        $storyboard['preview']['video_url'] = $storyboard['provider_attempt']['output_url'] ?? null;
+        $storyboard['export']['status'] = 'provider_submitted';
+        $storyboard['message'] = '伸展台影片任務已送出至真實影片 provider。';
+    }
 
     AiJob::create([
         'user_id' => auth()->id(),
         'clothing_id' => $clothing->id,
         'job_type' => 'runway_video',
-        'status' => 'degraded',
-        'mode' => 'mock',
+        'status' => ($storyboard['provider_attempt']['status'] ?? null) === 'ready' ? 'ready' : 'degraded',
+        'mode' => ($storyboard['provider_attempt']['status'] ?? null) === 'ready' ? 'real_adapter' : 'mock',
         'request_id' => 'runway_l1_' . now()->format('YmdHis') . '_' . uniqid(),
         'input_json' => [
             'clothing_id' => $clothing->id,
             'video_style' => $validated['video_style'],
-            'camera_rhythm' => $validated['camera_rhythm'] ?? null,
+            'camera_rhythm' => $cameraRhythm,
+            'target_provider' => 'veo',
+            'expected_aspect_ratio' => '9:16',
         ],
         'result_json' => $storyboard,
         'degraded_reason' => 'RUNWAY_VIDEO_API_NOT_CONNECTED',
@@ -159,10 +224,10 @@ class WorkspaceController extends Controller
 
     return redirect()
         ->route('workspace.show', 'runway-video')
-        ->with('status', 'Runway Video L1 Storyboard 已建立，目前為 mock / degraded 展示模式。');
+        ->with('status', '伸展台影片 L2 預覽任務已建立，可人工驗收：預覽狀態 ready / 9:16。');
 }
 
-    public function storeDigitalTwin(Request $request): RedirectResponse
+    public function storeDigitalTwin(Request $request, ExternalModelProviderService $externalModelProvider): RedirectResponse
 {
     $validated = $request->validate([
         'height_cm' => ['required', 'integer', 'min:100', 'max:230'],
@@ -172,10 +237,10 @@ class WorkspaceController extends Controller
     ]);
 
     $profile = [
-        'title' => 'Digital Twin L1 Style Profile',
+        'title' => '數位分身 L1 風格資料',
         'avatar' => [
             'type' => 'placeholder',
-            'label' => 'VogueAI Digital Twin',
+            'label' => 'VogueAI 數位分身',
             'image_url' => null,
         ],
         'profile' => [
@@ -187,33 +252,47 @@ class WorkspaceController extends Controller
         'style_summary' => [
             'headline' => '以個人偏好建立的 L1 風格分身',
             'description' => sprintf(
-                '此 Digital Twin 根據身高 %d cm、偏好「%s」與常見場合「%s」建立，目前為 mock / degraded 個人風格卡。',
+                '此數位分身根據身高 %d cm、偏好「%s」與常見場合「%s」建立，目前為安全備援個人風格卡。',
                 (int) $validated['height_cm'],
                 $validated['style_preference'],
                 $validated['common_occasion']
             ),
             'recommended_direction' => [
                 '以衣櫥現有單品建立個人化穿搭基準',
-                '後續可串接 AI Stylist，依照場合與風格偏好推薦穿搭',
+                '後續可串接 AI 穿搭顧問，依照場合與風格偏好推薦穿搭',
                 '未來可接 3D Avatar 或多視角生成服務',
             ],
         ],
         'style_tags' => [
             $validated['style_preference'],
             $validated['common_occasion'],
-            'Digital Twin L1',
-            'mock profile',
+            '數位分身 L1',
+            'fallback profile',
         ],
         'degraded_reason' => 'DIGITAL_TWIN_3D_MODEL_NOT_CONNECTED',
-        'message' => '目前為 Digital Twin L1 個人風格卡展示模式，尚未接入真實 3D 或外部生成服務。',
+        'message' => '目前為數位分身 L1 個人風格卡安全備援狀態，真實 3D 或外部生成服務可在 provider 完成後啟用。',
     ];
+
+    $profile['provider_attempt'] = $externalModelProvider->generateDigitalTwin([
+        'request_id' => 'digital_twin_l1_' . now()->format('YmdHis') . '_' . uniqid(),
+        'user_id' => auth()->id(),
+        'profile' => $profile['profile'],
+        'style_summary' => $profile['style_summary'],
+        'style_tags' => $profile['style_tags'],
+    ]);
+
+    if (($profile['provider_attempt']['status'] ?? null) === 'ready') {
+        $profile['avatar']['type'] = 'provider_avatar';
+        $profile['avatar']['image_url'] = $profile['provider_attempt']['output_url'] ?? null;
+        $profile['message'] = '數位分身任務已送出至真實 avatar provider。';
+    }
 
     AiJob::create([
         'user_id' => auth()->id(),
         'clothing_id' => null,
         'job_type' => 'digital_twin',
-        'status' => 'degraded',
-        'mode' => 'mock',
+        'status' => ($profile['provider_attempt']['status'] ?? null) === 'ready' ? 'ready' : 'degraded',
+        'mode' => ($profile['provider_attempt']['status'] ?? null) === 'ready' ? 'real_adapter' : 'mock',
         'request_id' => 'digital_twin_l1_' . now()->format('YmdHis') . '_' . uniqid(),
         'input_json' => [
             'height_cm' => (int) $validated['height_cm'],
@@ -231,7 +310,7 @@ class WorkspaceController extends Controller
 
     return redirect()
         ->route('workspace.show', 'digital-twin')
-        ->with('status', 'Digital Twin L1 個人風格卡已建立，目前為 mock / degraded 展示模式。');
+        ->with('status', '數位分身 L1 風格資料已建立，可人工驗收：fallback profile / degraded。');
 }
 
     public function analyzeDigitalTwinCloset(): RedirectResponse
@@ -243,7 +322,7 @@ class WorkspaceController extends Controller
     if ($clothes->isEmpty()) {
         return redirect()
             ->route('workspace.show', 'digital-twin')
-            ->with('error', '目前衣櫥尚未有衣物，請先上傳衣物後再進行 Digital Twin L2 衣櫥風格分析。');
+            ->with('error', '目前衣櫥尚未有衣物，請先上傳衣物後再進行數位分身 L2 衣櫥風格分析。');
     }
 
     $categoryCounts = $this->countClothingField($clothes, 'category');
@@ -264,10 +343,10 @@ class WorkspaceController extends Controller
     $dominantStyle = $topStyleTags[0]['label'] ?? '尚未建立風格標籤';
 
     $profile = [
-        'title' => 'Digital Twin L2 Closet Style Analysis',
+        'title' => '數位分身 L2 衣櫥風格分析',
         'avatar' => [
             'type' => 'closet_profile',
-            'label' => 'VogueAI Closet-Based Digital Twin',
+            'label' => 'VogueAI 衣櫥型數位分身',
             'image_url' => null,
         ],
         'profile' => [
@@ -279,7 +358,7 @@ class WorkspaceController extends Controller
             'dominant_style' => $dominantStyle,
         ],
         'style_summary' => [
-            'headline' => '根據衣櫥資料建立的 Digital Twin L2 風格摘要',
+            'headline' => '根據衣櫥資料建立的數位分身 L2 風格摘要',
             'description' => sprintf(
                 '系統分析了你目前衣櫥中的 %d 件衣物，發現你最常出現的類別是「%s」，主要顏色是「%s」，常見場合偏向「%s」，整體風格可歸納為「%s」。',
                 $clothes->count(),
@@ -289,9 +368,9 @@ class WorkspaceController extends Controller
                 $dominantStyle
             ),
             'recommended_direction' => [
-                '可將此風格摘要提供給 AI Stylist，讓穿搭推薦更貼近使用者真實衣櫥。',
+                '可將此風格摘要提供給 AI 穿搭顧問，讓穿搭推薦更貼近使用者真實衣櫥。',
                 '若想讓分析更準確，建議補齊每件衣物的季節、場合與 style_tags。',
-                '後續可加入穿搭接受 / 拒絕紀錄，讓 Digital Twin 逐步學習個人偏好。',
+                '後續可加入穿搭接受 / 拒絕紀錄，讓數位分身逐步學習個人偏好。',
             ],
         ],
         'closet_statistics' => [
@@ -306,11 +385,11 @@ class WorkspaceController extends Controller
             $dominantColor,
             $dominantOccasion,
             $dominantStyle,
-            'Digital Twin L2',
-            'closet analysis',
+            '數位分身 L2',
+            '衣櫥分析',
         ])->filter()->unique()->values()->all(),
         'degraded_reason' => 'DIGITAL_TWIN_RULE_BASED_CLOSET_ANALYSIS',
-        'message' => '目前為 Digital Twin L2 衣櫥統計分析模式，尚未接入真實 3D Avatar 或生成式模型。',
+        'message' => '目前為數位分身 L2 衣櫥統計分析模式，尚未接入真實 3D Avatar 或生成式模型。',
     ];
 
     AiJob::create([
@@ -334,7 +413,7 @@ class WorkspaceController extends Controller
 
     return redirect()
         ->route('workspace.show', 'digital-twin')
-        ->with('status', 'Digital Twin L2 已根據你的衣櫥資料產生風格分析，目前為 rule_based / degraded 模式。');
+        ->with('status', '數位分身 L2 衣櫥風格分析已建立，可人工驗收：rule_based / degraded。');
 }
 
     private function countClothingField($clothes, string $field): array
@@ -389,7 +468,7 @@ private function topCountItems(array $counts, int $limit = 5): array
         return [
             'ai-stylist' => [
                 'slug' => 'ai-stylist',
-                'title' => 'AI Stylist Workspace',
+                'title' => 'AI 穿搭顧問工作區',
                 'summary' => '情境穿搭推薦工作台，對接 recommend 流程與搭配結果儲存。',
                 'primaryAction' => '產生穿搭建議',
                 'api' => '/api/stylist/recommend',
@@ -398,16 +477,16 @@ private function topCountItems(array $counts, int $limit = 5): array
             ],
             'virtual-try-on' => [
                 'slug' => 'virtual-try-on',
-                'title' => 'Virtual Try-On Workspace',
+                'title' => '虛擬試穿工作區',
                 'summary' => '人物照片與衣物圖片輸入頁，後續對接 try-on 與姿態分析。',
-                'primaryAction' => '執行 Try-On',
+                'primaryAction' => '執行試穿',
                 'api' => '/api/tryon/generate',
-                'status' => 'degraded/mock',
+                'status' => 'degraded/fallback',
                 'fields' => ['人物照片', '衣物圖片', '角度設定'],
             ],
             'community' => [
                 'slug' => 'community',
-                'title' => 'Community Workspace',
+                'title' => '社群工作區',
                 'summary' => '貼文、按讚、評論工作台，預留社群 API 對接欄位。',
                 'primaryAction' => '發布貼文',
                 'api' => '/api/community/posts',
@@ -416,25 +495,25 @@ private function topCountItems(array $counts, int $limit = 5): array
             ],
             'blind-box' => [
                 'slug' => 'blind-box',
-                'title' => 'Blind Box Workspace',
+                'title' => '穿搭盲盒工作區',
                 'summary' => '盲盒穿搭前端流程，顯示隨機穿搭結果與收藏入口。',
                 'primaryAction' => '抽取盲盒',
                 'api' => '/api/blindbox/generate',
-                'status' => 'degraded/mock',
+                'status' => 'degraded/fallback',
                 'fields' => ['偏好風格', '場景', '限制條件'],
             ],
             'runway-video' => [
                 'slug' => 'runway-video',
-                'title' => 'Runway Video Workspace',
+                'title' => '伸展台影片工作區',
                 'summary' => '走秀影片生成流程頁，預留影片任務 queue 狀態顯示。',
-                'primaryAction' => '生成 Runway Video',
+                'primaryAction' => '生成伸展台影片',
                 'api' => '/api/video/generate',
                 'status' => 'pending',
                 'fields' => ['穿搭圖', '影片風格', '鏡頭節奏'],
             ],
             'chat-assistant' => [
                 'slug' => 'chat-assistant',
-                'title' => 'Chat Assistant Workspace',
+                'title' => '聊天助理工作區',
                 'summary' => 'AI 對話與穿搭問答頁面，保留 prompt / context 設定。',
                 'primaryAction' => '送出問題',
                 'api' => '/api/gemini/visual-stylist-call',
@@ -443,7 +522,7 @@ private function topCountItems(array $counts, int $limit = 5): array
             ],
             'showcase' => [
                 'slug' => 'showcase',
-                'title' => 'Showcase Workspace',
+                'title' => '展示牆工作區',
                 'summary' => '商家商品展示與一鍵入庫界面，先做前台卡片與篩選。',
                 'primaryAction' => '加入衣櫥',
                 'api' => '/api/import/confirm',
@@ -452,16 +531,16 @@ private function topCountItems(array $counts, int $limit = 5): array
             ],
             'digital-twin' => [
                 'slug' => 'digital-twin',
-                'title' => 'Digital Twin Workspace',
+                'title' => '數位分身工作區',
                 'summary' => '3D 多視角生成流程頁，預留任務狀態與圖像牆。',
                 'primaryAction' => '生成多視角',
                 'api' => '/api/digital-twin/generate-all',
-                'status' => 'degraded/mock',
+                'status' => 'degraded/fallback',
                 'fields' => ['身高', '體重', '風格提示詞'],
             ],
             'travel-packer' => [
                 'slug' => 'travel-packer',
-                'title' => 'Travel Packer Workspace',
+                'title' => '旅行打包工作區',
                 'summary' => '旅行打包清單生成與天氣資料輸入頁。',
                 'primaryAction' => '產生打包清單',
                 'api' => '/api/travel/packing-list',
@@ -470,7 +549,7 @@ private function topCountItems(array $counts, int $limit = 5): array
             ],
             'smart-storage' => [
                 'slug' => 'smart-storage',
-                'title' => 'Smart Storage Workspace',
+                'title' => '智慧收納工作區',
                 'summary' => '收納箱與衣物位置管理頁，對接 storage 相關 API。',
                 'primaryAction' => '新增收納箱',
                 'api' => '/api/storage/boxes',
@@ -479,7 +558,7 @@ private function topCountItems(array $counts, int $limit = 5): array
             ],
             'quick-snap' => [
                 'slug' => 'quick-snap',
-                'title' => 'Quick Snap Workspace',
+                'title' => '快速拍照工作區',
                 'summary' => '快速拍照入庫流程與即時預覽。',
                 'primaryAction' => '拍照入庫',
                 'api' => '/api/import/scan',
@@ -488,16 +567,16 @@ private function topCountItems(array $counts, int $limit = 5): array
             ],
             'smart-tag' => [
                 'slug' => 'smart-tag',
-                'title' => 'Smart Tag Workspace',
+                'title' => '智慧標籤工作區',
                 'summary' => '吊牌/發票掃描辨識工作台。',
                 'primaryAction' => '掃描辨識',
                 'api' => '/api/import/scan',
-                'status' => 'degraded/mock',
+                'status' => 'degraded/fallback',
                 'fields' => ['圖片', 'OCR 語言', '品牌線索'],
             ],
             'magic-mirror' => [
                 'slug' => 'magic-mirror',
-                'title' => 'Magic Mirror Workspace',
+                'title' => '魔鏡試穿工作區',
                 'summary' => '姿態與體態分析入口，展示分析結果與建議。',
                 'primaryAction' => '開始分析',
                 'api' => '/api/magic-mirror/analyze',
@@ -506,7 +585,7 @@ private function topCountItems(array $counts, int $limit = 5): array
             ],
             'stylist-call' => [
                 'slug' => 'stylist-call',
-                'title' => 'AI Bestie Call Workspace',
+                'title' => 'AI 好友通話工作區',
                 'summary' => '視訊風格諮詢工作台，先完成前端流程與狀態設計。',
                 'primaryAction' => '啟動通話',
                 'api' => '/api/gemini/visual-stylist-call',

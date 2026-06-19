@@ -69,6 +69,11 @@ class Clothing extends Model
         return $this->hasMany(AiJob::class, 'clothing_id');
     }
 
+    public function wearLogs(): HasMany
+    {
+        return $this->hasMany(WearLog::class, 'clothing_id');
+    }
+
     public function getDisplayImageUrlAttribute(): ?string
     {
         if ($this->image_url) {

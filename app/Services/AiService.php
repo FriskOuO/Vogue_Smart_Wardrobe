@@ -97,7 +97,7 @@ class AiService
             'mock_mode' => $data['mock_mode'] ?? $this->mockMode,
         ];
 
-        return $this->post('/ai/attributes', $payload, 30);
+        return $this->post('/ai/attributes', $payload, max($this->timeoutSeconds, 180));
     }
 
     /**
@@ -118,7 +118,7 @@ class AiService
             'mock_mode' => $data['mock_mode'] ?? $this->mockMode,
         ];
 
-        return $this->post('/ai/embed/image', $payload, 30);
+        return $this->post('/ai/embed/image', $payload, max($this->timeoutSeconds, 120));
     }
 
     /**
@@ -137,7 +137,7 @@ class AiService
             'mock_mode' => $data['mock_mode'] ?? $this->mockMode,
         ];
 
-        return $this->post('/ai/embed/text', $payload, 15);
+        return $this->post('/ai/embed/text', $payload, max($this->timeoutSeconds, 60));
     }
 
     /**
@@ -180,7 +180,7 @@ class AiService
             'mock_mode' => $data['mock_mode'] ?? $this->mockMode,
         ];
 
-        return $this->post('/ai/pose', $payload, 30);
+        return $this->post('/ai/pose', $payload, max($this->timeoutSeconds, 90));
     }
 
     /**
