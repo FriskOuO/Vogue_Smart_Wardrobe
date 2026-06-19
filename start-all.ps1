@@ -1,11 +1,30 @@
+param(
+    [switch]$SkipDemoCheck
+)
+
 # VogueAI Smart Wardrobe - Start All Services
 # This script opens three PowerShell windows:
 # 1. Laravel server
 # 2. Vite dev server
 # 3. Python FastAPI AI Service
+#
+# Qdrant is started separately when real vector search is needed:
+# .\start-qdrant.ps1 -NoTelemetry
 
-$ProjectRoot = "C:\Users\User\Vogue_Smart_Wardrobe"
+$ProjectRoot = $PSScriptRoot
 $AiServicePath = Join-Path $ProjectRoot "ai_service"
+
+# Some Windows shells expose both Path and PATH in the same process. .NET's
+# process launcher treats that as duplicate keys, so normalize before launching.
+$ProcessEnv = [System.Environment]::GetEnvironmentVariables("Process")
+$NormalizedPath = $ProcessEnv["Path"]
+if (!$NormalizedPath) {
+    $NormalizedPath = $ProcessEnv["PATH"]
+}
+if ($ProcessEnv.Contains("Path") -and $ProcessEnv.Contains("PATH")) {
+    [System.Environment]::SetEnvironmentVariable("PATH", $null, "Process")
+    [System.Environment]::SetEnvironmentVariable("Path", $NormalizedPath, "Process")
+}
 
 Write-Host "======================================" -ForegroundColor Cyan
 Write-Host " VogueAI Smart Wardrobe Start Script" -ForegroundColor Cyan
@@ -31,22 +50,47 @@ if (!(Test-Path $AiServicePath)) {
 }
 
 # Check AI virtual environment
-$VenvActivate = Join-Path $AiServicePath ".venv\Scripts\activate.ps1"
-if (!(Test-Path $VenvActivate)) {
+$VenvPython = Join-Path $AiServicePath ".venv\Scripts\python.exe"
+if (!(Test-Path $VenvPython)) {
     Write-Host "AI Service virtual environment not found: ai_service\.venv" -ForegroundColor Yellow
     Write-Host "Please create it first:" -ForegroundColor Yellow
     Write-Host "cd ai_service"
     Write-Host "python -m venv .venv"
-    Write-Host ".venv\Scripts\activate"
-    Write-Host "pip install -r requirements.txt"
+    Write-Host ".\.venv\Scripts\python.exe -m pip install -r requirements.txt"
     exit 1
+}
+
+$NpmCmd = (Get-Command npm.cmd -ErrorAction SilentlyContinue).Source
+if (!$NpmCmd) {
+    Write-Host "npm.cmd not found. Please install Node.js and npm." -ForegroundColor Red
+    exit 1
+}
+
+$PhpCmd = (Get-Command php.exe -ErrorAction SilentlyContinue).Source
+if (!$PhpCmd) {
+    Write-Host "php.exe not found. Please install PHP or add it to Path." -ForegroundColor Red
+    exit 1
+}
+
+if (!$SkipDemoCheck) {
+    Write-Host "Running demo readiness check..." -ForegroundColor Green
+    Push-Location $ProjectRoot
+    & $PhpCmd artisan vogueai:demo-check
+    $DemoCheckExitCode = $LASTEXITCODE
+    Pop-Location
+
+    if ($DemoCheckExitCode -ne 0) {
+        Write-Host "Demo readiness check failed. Fix required items before starting services." -ForegroundColor Red
+        Write-Host "You can bypass this check with: .\start-all.ps1 -SkipDemoCheck" -ForegroundColor Yellow
+        exit $DemoCheckExitCode
+    }
 }
 
 Write-Host "Starting Laravel server..." -ForegroundColor Green
 Start-Process powershell -ArgumentList @(
     "-NoExit",
     "-Command",
-    "cd '$ProjectRoot'; php artisan serve"
+    "cd '$ProjectRoot'; & '$PhpCmd' artisan serve"
 )
 
 Start-Sleep -Seconds 2
@@ -55,7 +99,7 @@ Write-Host "Starting Vite dev server..." -ForegroundColor Green
 Start-Process powershell -ArgumentList @(
     "-NoExit",
     "-Command",
-    "cd '$ProjectRoot'; npm run dev"
+    "cd '$ProjectRoot'; & '$NpmCmd' run dev"
 )
 
 Start-Sleep -Seconds 2
@@ -64,7 +108,7 @@ Write-Host "Starting Python AI Service..." -ForegroundColor Green
 Start-Process powershell -ArgumentList @(
     "-NoExit",
     "-Command",
-    "cd '$AiServicePath'; .\.venv\Scripts\activate.ps1; uvicorn main:app --host 127.0.0.1 --port 8001 --reload"
+    "cd '$AiServicePath'; & '$VenvPython' -m uvicorn main:app --host 127.0.0.1 --port 8001 --reload"
 )
 
 Write-Host ""

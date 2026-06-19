@@ -15,6 +15,7 @@
 /node_modules
 /public/build
 /public/hot
+/public/hot.disabled
 /public/storage
 /storage/*.key
 /storage/pail
@@ -23,12 +24,15 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /database/database.sqlite
+/tools/qdrant/
 
 ai_service/.env
 ai_service/.venv
 __pycache__/
+.pytest_cache/
 *.pyc
 # Python AI model files
+ai_service/models/huggingface/
 ai_service/models/**/*.pt
 ai_service/models/**/*.pth
 ai_service/models/**/*.onnx
@@ -38,3 +42,10 @@ ai_service/models/**/*.ckpt
 
 # Keep model documentation
 !ai_service/models/**/README.md
+
+# AI local caches
+ai_service/models/matplotlib/
+ai_service/models/ultralytics/
+
+# AI generated outputs
+ai_service/static/tryon/

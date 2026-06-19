@@ -1,12 +1,12 @@
-<x-vogue-page title="VogueAI | Add Clothing" skeleton-id="vogue-closet-create-skeleton">
+<x-vogue-page title="VogueAI | 新增衣物" skeleton-id="vogue-closet-create-skeleton">
     <section class="vogue-highlight reveal mt-6">
         <div>
-            <p class="vogue-eyebrow">Smart Closet</p>
+            <p class="vogue-eyebrow">智慧衣櫥</p>
             <h2>新增衣物</h2>
-            <p>先把上傳與文字欄位流程確認完成，後續直接接到你正在做的資料表與 AI 串接。</p>
+            <p>上傳衣物照片並填入簡短備註，系統會建立衣物資料並觸發 AI 分析流程。</p>
         </div>
         <div class="vogue-closet-toolbar">
-            <a href="{{ route('closet.index') }}" class="vogue-btn vogue-btn-soft">回衣櫥列表</a>
+            <a href="{{ route('closet.index') }}" class="vogue-btn vogue-btn-soft">回我的衣櫥</a>
         </div>
     </section>
 
@@ -24,7 +24,7 @@
 
             <div>
                 <label for="name" class="vogue-label">衣物名稱</label>
-                <input id="name" name="name" type="text" value="{{ old('name') }}" placeholder="例如：White Linen Shirt" required class="vogue-input">
+                <input id="name" name="name" type="text" value="{{ old('name') }}" placeholder="例如：白色亞麻襯衫" required class="vogue-input">
                 @error('name')
                     <p class="mt-2 text-sm text-rose-300">{{ $message }}</p>
                 @enderror
@@ -32,14 +32,14 @@
 
             <div>
                 <label for="notes" class="vogue-label">備註</label>
-                <textarea id="notes" name="notes" rows="5" placeholder="可先填寫材質、購買地點、搭配想法..." class="vogue-textarea">{{ old('notes') }}</textarea>
+                <textarea id="notes" name="notes" rows="5" placeholder="可以填入材質、版型、常穿場合或搭配想法" class="vogue-textarea">{{ old('notes') }}</textarea>
                 @error('notes')
                     <p class="mt-2 text-sm text-rose-300">{{ $message }}</p>
                 @enderror
             </div>
 
             <div class="vogue-card" style="border-color: rgba(59, 130, 246, 0.45);">
-                <p style="color: var(--vogue-ink-soft);">目前為前端展示模式：送出後回到列表顯示成功訊息，尚未寫入資料庫。</p>
+                <p style="color: var(--vogue-ink-soft);">目前會先建立可展示的 AI 分析資料；真實模型接入後可沿用同一個流程。</p>
             </div>
 
             <button type="submit" class="vogue-btn vogue-btn-solid">送出</button>

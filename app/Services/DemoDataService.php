@@ -1,0 +1,311 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\AiEmbedding;
+use App\Models\Clothing;
+use App\Models\OutfitLog;
+use App\Models\StylistHistory;
+use App\Models\User;
+use App\Models\WearLog;
+use Illuminate\Support\Facades\Hash;
+
+class DemoDataService
+{
+    public const DEMO_EMAIL = 'demo@vogueai.local';
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function seed(): array
+    {
+        $user = User::updateOrCreate(
+            ['email' => self::DEMO_EMAIL],
+            [
+                'name' => 'VogueAI Demo User',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+            ]
+        );
+
+        $clothes = collect($this->demoClothes())
+            ->map(fn (array $item) => $this->upsertClothing($user, $item))
+            ->values();
+
+        $clothes->each(function (Clothing $clothing, int $index) use ($user): void {
+            $this->upsertEmbedding($user, $clothing, $index);
+            $this->upsertWearLog($user, $clothing, $index);
+        });
+
+        $stylistHistory = $this->upsertStylistHistory($user, $clothes);
+        $this->upsertOutfitLog($user, $stylistHistory, $clothes);
+
+        return [
+            'user_email' => self::DEMO_EMAIL,
+            'password' => 'password',
+            'clothes' => $clothes->count(),
+            'embeddings' => AiEmbedding::where('user_id', $user->id)->count(),
+            'wear_logs' => WearLog::where('user_id', $user->id)->count(),
+            'stylist_histories' => StylistHistory::where('user_id', $user->id)->count(),
+            'outfit_logs' => OutfitLog::where('user_id', $user->id)->count(),
+        ];
+    }
+
+    /**
+     * @return array<string, int|string>
+     */
+    public function cleanup(): array
+    {
+        $user = User::where('email', self::DEMO_EMAIL)->first();
+
+        if (! $user) {
+            return [
+                'user_email' => self::DEMO_EMAIL,
+                'deleted' => 0,
+                'message' => 'Demo user not found.',
+            ];
+        }
+
+        $deleted = 0;
+        $deleted += AiEmbedding::where('user_id', $user->id)->delete();
+        $deleted += WearLog::where('user_id', $user->id)->delete();
+        $deleted += OutfitLog::where('user_id', $user->id)->delete();
+        $deleted += StylistHistory::where('user_id', $user->id)->delete();
+
+        $clothes = Clothing::withTrashed()
+            ->where('user_id', $user->id)
+            ->get();
+        $deleted += $clothes->count();
+        $clothes->each->forceDelete();
+
+        $deleted += 1;
+        $user->delete();
+
+        return [
+            'user_email' => self::DEMO_EMAIL,
+            'deleted' => $deleted,
+            'message' => 'Demo data cleaned up.',
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function demoClothes(): array
+    {
+        return [
+            [
+                'name' => 'Demo White Shirt',
+                'image_path' => 'demo/white-shirt.jpg',
+                'image_url' => '/images/demo/white-shirt.jpg',
+                'category' => '上衣',
+                'subcategory' => '襯衫',
+                'color' => '白色',
+                'season' => ['春', '夏'],
+                'occasion' => ['日常', '通勤'],
+                'usage' => ['休閒穿搭', '校園穿搭'],
+                'style_tags' => ['簡約', '基本款'],
+                'vector' => [0.4, 0.1, 0.0, 0.3, 0.7, 0.0, 0.4, 0.0],
+            ],
+            [
+                'name' => 'Demo Navy Blazer',
+                'image_path' => 'demo/navy-blazer.jpg',
+                'image_url' => '/images/demo/navy-blazer.jpg',
+                'category' => '外套',
+                'subcategory' => '西裝外套',
+                'color' => '深藍色',
+                'season' => ['秋', '冬'],
+                'occasion' => ['通勤', '正式'],
+                'usage' => ['上班穿搭', '正式場合'],
+                'style_tags' => ['俐落', 'smart casual'],
+                'vector' => [0.8, 0.0, 0.5, 0.0, 0.3, 0.0, 0.5, 0.1],
+            ],
+            [
+                'name' => 'Demo Red Dress',
+                'image_path' => 'demo/red-dress.jpg',
+                'image_url' => '/images/demo/red-dress.jpg',
+                'category' => '洋裝',
+                'subcategory' => '約會洋裝',
+                'color' => '紅色',
+                'season' => ['春', '夏'],
+                'occasion' => ['約會', '晚餐'],
+                'usage' => ['約會穿搭', '晚宴'],
+                'style_tags' => ['亮色', '優雅'],
+                'vector' => [0.3, 0.0, 0.0, 0.4, 0.0, 0.8, 0.0, 0.6],
+            ],
+        ];
+    }
+
+    private function upsertClothing(User $user, array $item): Clothing
+    {
+        $clothing = Clothing::withTrashed()->updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'name' => $item['name'],
+            ],
+            [
+                'image_path' => $item['image_path'],
+                'image_url' => $item['image_url'],
+                'notes' => 'Generated by vogueai:demo-data.',
+                'category' => $item['category'],
+                'subcategory' => $item['subcategory'],
+                'color' => $item['color'],
+                'secondary_colors' => [],
+                'season' => $item['season'],
+                'occasion' => $item['occasion'],
+                'usage' => $item['usage'],
+                'style_tags' => $item['style_tags'],
+                'material_guess' => 'demo',
+                'pattern' => 'solid',
+                'wear_count' => 1,
+                'last_worn_at' => now()->subDays(2),
+                'ai_status' => 'degraded',
+                'ai_mode' => 'mock',
+                'ai_confidence' => 0.65,
+                'ai_raw_result' => [
+                    'demo_seed' => true,
+                    'image_caption' => [
+                        'target_provider' => 'blip',
+                        'active_provider' => 'mock_caption_fallback',
+                        'adapter' => 'blip-image-caption-v1',
+                        'caption' => 'Demo caption for ' . $item['name'],
+                        'fallback_active' => true,
+                    ],
+                ],
+                'ai_error_code' => null,
+                'ai_error_message' => null,
+            ]
+        );
+
+        if ($clothing->trashed()) {
+            $clothing->restore();
+        }
+
+        return $clothing;
+    }
+
+    private function upsertEmbedding(User $user, Clothing $clothing, int $index): void
+    {
+        $vector = $this->demoClothes()[$index]['vector'];
+
+        AiEmbedding::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'clothing_id' => $clothing->id,
+                'embedding_type' => 'image',
+            ],
+            [
+                'source_type' => 'clothing',
+                'source_text' => $clothing->name,
+                'model' => 'mock-image-embedding',
+                'vector_dimension' => count($vector),
+                'embedding' => $vector,
+                'embedding_preview' => array_slice($vector, 0, 4),
+                'vector_provider' => 'mock_sqlite_fallback',
+                'vector_collection' => 'ai_embeddings',
+                'vector_point_id' => 'clothing_' . $clothing->id,
+                'vector_stored' => true,
+                'status' => 'degraded',
+                'mode' => 'mock',
+                'degraded_reason' => 'DEMO_DATA_SEED',
+                'raw_result' => [
+                    'demo_seed' => true,
+                ],
+                'error_code' => null,
+                'error_message' => null,
+            ]
+        );
+    }
+
+    private function upsertWearLog(User $user, Clothing $clothing, int $index): void
+    {
+        WearLog::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'clothing_id' => $clothing->id,
+                'source' => 'demo_seed',
+            ],
+            [
+                'worn_at' => now()->subDays($index + 1),
+                'context' => 'demo',
+                'notes' => 'Demo wear log.',
+                'metadata' => [
+                    'demo_seed' => true,
+                ],
+            ]
+        );
+    }
+
+    private function upsertStylistHistory(User $user, $clothes): StylistHistory
+    {
+        $selectedItems = $clothes
+            ->take(3)
+            ->map(fn (Clothing $clothing) => [
+                'id' => $clothing->id,
+                'name' => $clothing->name,
+                'category' => $clothing->category,
+                'color' => $clothing->color,
+            ])
+            ->values()
+            ->all();
+
+        return StylistHistory::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'occasion' => 'Demo smart casual day',
+            ],
+            [
+                'weather' => 'mild',
+                'style_preference' => 'clean smart casual',
+                'context_json' => [
+                    'demo_seed' => true,
+                    'season_context' => 'spring',
+                ],
+                'selected_items' => $selectedItems,
+                'recommendation_json' => [
+                    'demo_seed' => true,
+                    'title' => 'Demo smart casual recommendation',
+                    'summary' => 'A clean mock outfit using seeded wardrobe data.',
+                    'embedding_signals' => [
+                        'mode' => 'local_cosine',
+                        'top_matches' => $selectedItems,
+                    ],
+                ],
+                'status' => 'degraded',
+                'mode' => 'mock',
+                'is_accepted' => false,
+                'feedback_status' => null,
+                'feedback_reason' => null,
+                'feedback_json' => null,
+                'feedback_submitted_at' => null,
+            ]
+        );
+    }
+
+    private function upsertOutfitLog(User $user, StylistHistory $history, $clothes): void
+    {
+        $selectedItems = $history->selected_items ?? [];
+
+        OutfitLog::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'stylist_history_id' => $history->id,
+                'source' => 'demo_seed',
+            ],
+            [
+                'name' => 'Demo smart casual outfit',
+                'logged_at' => now()->subDay(),
+                'occasion' => $history->occasion,
+                'weather' => $history->weather,
+                'selected_items' => $selectedItems,
+                'item_ids' => $clothes->pluck('id')->values()->all(),
+                'item_count' => $clothes->count(),
+                'context_json' => $history->context_json ?? [],
+                'notes' => 'Demo outfit log.',
+                'metadata' => [
+                    'demo_seed' => true,
+                ],
+            ]
+        );
+    }
+}

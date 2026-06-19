@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="zh-Hant">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'VogueAI') }}</title>
 
         <script>
             (function () {
@@ -18,11 +18,9 @@
             })();
         </script>
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="vogue-auth-body vogue-is-loading antialiased">
@@ -35,20 +33,9 @@
                     <div class="vogue-auth-skeleton-heading"></div>
                     <div class="vogue-auth-skeleton-copy"></div>
                     <div class="vogue-auth-skeleton-copy short"></div>
-
-                    <div class="vogue-auth-skeleton-field">
-                        <div class="label"></div>
-                        <div class="input"></div>
-                    </div>
-                    <div class="vogue-auth-skeleton-field">
-                        <div class="label"></div>
-                        <div class="input"></div>
-                    </div>
-
-                    <div class="vogue-auth-skeleton-foot">
-                        <div class="link"></div>
-                        <div class="button"></div>
-                    </div>
+                    <div class="vogue-auth-skeleton-field"><div class="label"></div><div class="input"></div></div>
+                    <div class="vogue-auth-skeleton-field"><div class="label"></div><div class="input"></div></div>
+                    <div class="vogue-auth-skeleton-foot"><div class="link"></div><div class="button"></div></div>
                 </div>
             </div>
         </div>
@@ -62,12 +49,12 @@
                     <span class="vogue-brand-mark">V</span>
                     <span>VogueAI</span>
                 </a>
-                <div class="vogue-auth-tools" aria-label="auth language switcher">
-                    <button id="auth-lang-toggle" type="button" class="vogue-auth-switch" aria-label="Toggle language">
-                        <span data-i18n="switch_lang">中 / EN</span>
+                <div class="vogue-auth-tools" aria-label="登入頁工具">
+                    <button id="auth-lang-toggle" type="button" class="vogue-auth-switch" aria-label="套用中文">
+                        <span data-i18n="switch_lang">中文</span>
                     </button>
                 </div>
-                <p class="mt-2 text-sm text-slate-300/80" data-i18n="auth_tagline">Smart Wardrobe Platform</p>
+                <p class="mt-2 text-sm text-slate-300/80" data-i18n="auth_tagline">智慧衣櫥平台</p>
             </div>
 
             <div class="w-full sm:max-w-md mt-7 px-6 py-6 sm:px-7 sm:py-7 vogue-auth-card">
@@ -77,84 +64,46 @@
 
         <script>
             const authI18nMap = {
-                zh: {
-                    switch_lang: '中 / EN',
-                    auth_tagline: 'Smart Wardrobe Platform',
-                    login_title: '登入你的時尚中樞',
-                    login_desc: '登入後可管理衣櫥、AI 穿搭與個人帳號資料。',
-                    register_title: '建立 VogueAI 帳號',
-                    register_desc: '完成註冊後即可使用智慧衣櫥、AI 穿搭與社群功能。',
-                    field_name: '姓名',
-                    field_email: 'Email',
-                    field_password: '密碼',
-                    field_password_confirm: '確認密碼',
-                    auth_remember: '記住我',
-                    auth_to_register: '還沒有帳號？立即註冊',
-                    auth_to_login: '已經有帳號？登入',
-                    auth_forgot_password: '忘記密碼？',
-                    auth_login_button: '登入',
-                    auth_register_button: '註冊',
-                    back_home: '返回首頁'
-                },
-                en: {
-                    switch_lang: 'EN / 中',
-                    auth_tagline: 'Smart Wardrobe Platform',
-                    login_title: 'Sign in to your fashion hub',
-                    login_desc: 'Sign in to manage your wardrobe, AI styling, and account details.',
-                    register_title: 'Create a VogueAI account',
-                    register_desc: 'Sign up to unlock smart closet, AI styling, and community features.',
-                    field_name: 'Name',
-                    field_email: 'Email',
-                    field_password: 'Password',
-                    field_password_confirm: 'Confirm Password',
-                    auth_remember: 'Remember me',
-                    auth_to_register: 'No account yet? Register now',
-                    auth_to_login: 'Already registered? Log in',
-                    auth_forgot_password: 'Forgot your password?',
-                    auth_login_button: 'Log in',
-                    auth_register_button: 'Register',
-                    back_home: 'Back to home'
-                }
+                switch_lang: '中文',
+                auth_tagline: '智慧衣櫥平台',
+                login_title: '登入 VogueAI',
+                login_desc: '登入後可以管理衣櫥、AI 穿搭推薦與帳號資料。',
+                register_title: '建立 VogueAI 帳號',
+                register_desc: '建立帳號後即可開始整理衣櫥、使用 AI 搜尋與穿搭推薦。',
+                field_name: '姓名',
+                field_email: '電子郵件',
+                field_password: '密碼',
+                field_password_confirm: '確認密碼',
+                auth_remember: '記住我',
+                auth_to_register: '還沒有帳號？立即註冊',
+                auth_to_login: '已經有帳號？前往登入',
+                auth_forgot_password: '忘記密碼？',
+                auth_login_button: '登入',
+                auth_register_button: '註冊',
+                back_home: '回首頁'
             };
 
-            const authLangToggle = document.getElementById('auth-lang-toggle');
-
-            const applyAuthLanguage = (lang) => {
-                const activeLang = authI18nMap[lang] ? lang : 'zh';
-                localStorage.setItem('vogue-home-lang', activeLang);
-                document.documentElement.lang = activeLang === 'zh' ? 'zh-Hant' : 'en';
-
+            const applyAuthLanguage = () => {
+                localStorage.setItem('vogue-home-lang', 'zh');
+                document.documentElement.lang = 'zh-Hant';
                 document.querySelectorAll('.js-locale-input').forEach((input) => {
-                    input.value = activeLang === 'zh' ? 'zh_TW' : 'en';
+                    input.value = 'zh_TW';
                 });
-
                 document.querySelectorAll('[data-i18n]').forEach((el) => {
-                    const key = el.dataset.i18n;
-                    const value = authI18nMap[activeLang][key];
-
+                    const value = authI18nMap[el.dataset.i18n];
                     if (value) {
                         el.textContent = value;
                     }
                 });
             };
 
-            const applyAuthTheme = (theme) => {
-                document.body.dataset.theme = theme;
-            };
-
-            const savedLang = localStorage.getItem('vogue-home-lang') || 'zh';
             const savedTheme = localStorage.getItem('vogue-home-theme');
-            const theme = savedTheme === 'light' || savedTheme === 'dark'
+            document.body.dataset.theme = savedTheme === 'light' || savedTheme === 'dark'
                 ? savedTheme
                 : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
 
-            applyAuthTheme(theme);
-            applyAuthLanguage(savedLang);
-
-            authLangToggle?.addEventListener('click', () => {
-                const current = localStorage.getItem('vogue-home-lang') || 'zh';
-                applyAuthLanguage(current === 'zh' ? 'en' : 'zh');
-            });
+            applyAuthLanguage();
+            document.getElementById('auth-lang-toggle')?.addEventListener('click', applyAuthLanguage);
 
             window.addEventListener('load', () => {
                 window.setTimeout(() => {

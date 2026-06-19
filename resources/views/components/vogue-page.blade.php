@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="zh-Hant">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -38,73 +38,37 @@
     </main>
 
     <script>
-        const i18n = {
-            zh: {
-                nav_dashboard: '儀表板',
-                nav_closet: 'My Closet',
-                nav_account: '帳號總覽',
-                nav_users: '使用者管理',
-                sidebar_main: '主要入口',
-                sidebar_features: '功能切換',
-                sidebar_readme_modules: '未完成暫放區',
-                sidebar_staging_note: '這裡是舊版 README 模組的暫放工作台，待後端完成後再正式串接。',
-                toggle_sidebar: '側欄',
-                feature_smart_closet: 'Smart Closet Hub',
-                feature_upload: '上傳衣物',
-                feature_ai_search: 'AI 搜尋',
-                feature_ai_stylist: 'AI Stylist',
-                feature_try_on: 'Try-On / 姿態',
-                feature_digital_twin: 'Digital Twin',
-                feature_community: 'Community',
-                module_community: 'Community',
-                module_showcase: 'Showcase',
-                module_blind_box: 'Blind Box',
-                module_runway_video: 'Runway Video',
-                module_chat_assistant: 'Chat Assistant',
-                module_digital_twin: 'Digital Twin',
-                module_travel_packer: 'Travel Packer',
-                module_smart_storage: 'Smart Storage',
-                module_quick_snap: 'Quick Snap',
-                module_smart_tag: 'Smart Tag',
-                module_magic_mirror: 'Magic Mirror',
-                module_ai_bestie_call: 'AI Bestie Call',
-                switch_lang: '中 / EN',
-                switch_theme: '夜間',
-                logout: '登出'
-            },
-            en: {
-                nav_dashboard: 'Dashboard',
-                nav_closet: 'My Closet',
-                nav_account: 'Account',
-                nav_users: 'User Management',
-                sidebar_main: 'Main',
-                sidebar_features: 'Features',
-                sidebar_readme_modules: 'Staging Modules',
-                sidebar_staging_note: 'Temporary workspace for legacy README modules before backend integration is completed.',
-                toggle_sidebar: 'Sidebar',
-                feature_smart_closet: 'Smart Closet Hub',
-                feature_upload: 'Upload Garment',
-                feature_ai_search: 'AI Search',
-                feature_ai_stylist: 'AI Stylist',
-                feature_try_on: 'Try-On / Pose',
-                feature_digital_twin: 'Digital Twin',
-                feature_community: 'Community',
-                module_community: 'Community',
-                module_showcase: 'Showcase',
-                module_blind_box: 'Blind Box',
-                module_runway_video: 'Runway Video',
-                module_chat_assistant: 'Chat Assistant',
-                module_digital_twin: 'Digital Twin',
-                module_travel_packer: 'Travel Packer',
-                module_smart_storage: 'Smart Storage',
-                module_quick_snap: 'Quick Snap',
-                module_smart_tag: 'Smart Tag',
-                module_magic_mirror: 'Magic Mirror',
-                module_ai_bestie_call: 'AI Bestie Call',
-                switch_lang: 'EN / 中',
-                switch_theme: 'Night',
-                logout: 'Log out'
-            }
+        const zhLabels = {
+            nav_dashboard: '儀表板',
+            nav_closet: '我的衣櫥',
+            nav_account: '帳號總覽',
+            nav_users: '使用者管理',
+            sidebar_main: '主要入口',
+            sidebar_features: '功能切換',
+            sidebar_readme_modules: '模組工作區',
+            sidebar_staging_note: '這裡保留平台延伸模組入口，方便逐步接上後端與 AI 服務。',
+            toggle_sidebar: '側欄',
+            feature_smart_closet: '智慧衣櫥總覽',
+            feature_upload: '上傳衣物',
+            feature_ai_search: 'AI 搜尋',
+            feature_ai_stylist: 'AI 穿搭顧問',
+            feature_try_on: '試穿 / 姿態',
+            module_community: '社群',
+            module_showcase: '展示牆',
+            module_blind_box: '穿搭盲盒',
+            module_runway_video: '伸展台影片',
+            module_chat_assistant: '聊天助理',
+            module_digital_twin: '數位分身',
+            module_travel_packer: '旅行打包',
+            module_smart_storage: '智慧收納',
+            module_quick_snap: '快速拍照',
+            module_smart_tag: '智慧標籤',
+            module_magic_mirror: '魔鏡試穿',
+            module_ai_bestie_call: 'AI 好友通話',
+            switch_lang: '中文',
+            switch_theme: '夜間',
+            switch_theme_light: '日間',
+            logout: '登出'
         };
 
         const langToggle = document.getElementById('vogue-lang-toggle');
@@ -114,23 +78,22 @@
 
         const applyTheme = (theme) => {
             document.body.dataset.theme = theme;
+            document.documentElement.dataset.theme = theme;
             localStorage.setItem(storageTheme, theme);
-            const lang = localStorage.getItem(storageLang) || 'zh';
-            themeToggle.querySelector('.vogue-switch-label').textContent = theme === 'dark' ? i18n[lang].switch_theme : (lang === 'zh' ? '白晝' : 'Day');
+            if (themeToggle) {
+                themeToggle.querySelector('.vogue-switch-label').textContent = theme === 'dark' ? zhLabels.switch_theme : zhLabels.switch_theme_light;
+            }
         };
 
-        const applyLanguage = (lang) => {
-            const active = i18n[lang] ? lang : 'zh';
-            localStorage.setItem(storageLang, active);
-            document.documentElement.lang = active === 'zh' ? 'zh-Hant' : 'en';
+        const applyLanguage = () => {
+            localStorage.setItem(storageLang, 'zh');
+            document.documentElement.lang = 'zh-Hant';
             document.querySelectorAll('[data-i18n]').forEach((el) => {
-                const key = el.dataset.i18n;
-                if (i18n[active][key]) {
-                    el.textContent = i18n[active][key];
+                const value = zhLabels[el.dataset.i18n];
+                if (value) {
+                    el.textContent = value;
                 }
             });
-            const currentTheme = document.body.dataset.theme || 'dark';
-            themeToggle.querySelector('.vogue-switch-label').textContent = currentTheme === 'dark' ? i18n[active].switch_theme : (active === 'zh' ? '白晝' : 'Day');
         };
 
         const observer = new IntersectionObserver((entries) => {
@@ -143,18 +106,22 @@
         }, { threshold: 0.12 });
         document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 
-        applyTheme(localStorage.getItem(storageTheme) || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
-        applyLanguage(localStorage.getItem(storageLang) || 'zh');
+        if (window.vogueApplyTheme) {
+            window.vogueApplyTheme(localStorage.getItem(storageTheme) || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+        } else {
+            applyTheme(localStorage.getItem(storageTheme) || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+        }
+        applyLanguage();
 
-        langToggle.addEventListener('click', () => {
-            const current = localStorage.getItem(storageLang) || 'zh';
-            applyLanguage(current === 'zh' ? 'en' : 'zh');
-        });
-
-        themeToggle.addEventListener('click', () => {
-            const current = document.body.dataset.theme || 'dark';
-            applyTheme(current === 'dark' ? 'light' : 'dark');
-        });
+        if (langToggle) {
+            langToggle.addEventListener('click', applyLanguage);
+        }
+        if (themeToggle && !window.__vogueThemeControllerReady) {
+            themeToggle.addEventListener('click', () => {
+                const current = document.body.dataset.theme || 'dark';
+                applyTheme(current === 'dark' ? 'light' : 'dark');
+            });
+        }
 
         window.addEventListener('load', () => {
             const skeleton = document.getElementById('{{ $skeletonId ?? 'vogue-page-skeleton' }}');

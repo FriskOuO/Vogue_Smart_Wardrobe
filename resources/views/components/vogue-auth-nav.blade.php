@@ -1,6 +1,6 @@
 <div id="vogue-sidebar-backdrop" class="vogue-sidebar-backdrop" aria-hidden="true"></div>
 
-<aside id="vogue-sidebar" class="vogue-sidebar" aria-label="Sidebar Navigation">
+<aside id="vogue-sidebar" class="vogue-sidebar" aria-label="主選單">
     <div class="vogue-sidebar-head">
         <a href="{{ route('dashboard') }}" class="vogue-brand vogue-sidebar-brand">
             <span class="vogue-brand-mark">V</span>
@@ -11,20 +11,20 @@
     <div class="vogue-sidebar-section-title" data-i18n="sidebar_main">主要入口</div>
     <nav class="vogue-sidebar-nav">
         <a href="{{ route('dashboard') }}" class="vogue-sidebar-link {{ request()->routeIs('dashboard') ? 'is-active' : '' }}">
-            <span class="vogue-sidebar-icon">◉</span>
+            <span class="vogue-sidebar-icon">•</span>
             <span data-i18n="nav_dashboard">儀表板</span>
         </a>
         <a href="{{ route('closet.index') }}" class="vogue-sidebar-link {{ request()->routeIs('closet.index') || request()->routeIs('closet.show') ? 'is-active' : '' }}">
-            <span class="vogue-sidebar-icon">◎</span>
-            <span data-i18n="nav_closet">My Closet</span>
+            <span class="vogue-sidebar-icon">•</span>
+            <span data-i18n="nav_closet">我的衣櫥</span>
         </a>
         <a href="{{ route('profile.show') }}" class="vogue-sidebar-link {{ request()->routeIs('profile.show') ? 'is-active' : '' }}">
-            <span class="vogue-sidebar-icon">◌</span>
+            <span class="vogue-sidebar-icon">•</span>
             <span data-i18n="nav_account">帳號總覽</span>
         </a>
-        @if (auth()->user()->isAdmin())
+        @if (auth()->check() && auth()->user()->isAdmin())
             <a href="{{ route('admin.users.index') }}" class="vogue-sidebar-link {{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}">
-                <span class="vogue-sidebar-icon">◆</span>
+                <span class="vogue-sidebar-icon">•</span>
                 <span data-i18n="nav_users">使用者管理</span>
             </a>
         @endif
@@ -32,56 +32,104 @@
 
     <div class="vogue-sidebar-section-title" data-i18n="sidebar_features">功能切換</div>
     <nav class="vogue-sidebar-nav">
-        <a href="{{ route('closet.hub') }}" class="vogue-sidebar-link {{ request()->routeIs('closet.hub') ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="feature_smart_closet">Smart Closet Hub</span></a>
-        <a href="{{ route('closet.create') }}" class="vogue-sidebar-link {{ request()->routeIs('closet.create') ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="feature_upload">Upload Garment</span></a>
-        <a href="{{ route('closet.search') }}" class="vogue-sidebar-link {{ request()->routeIs('closet.search') ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="feature_ai_search">AI Search</span></a>
-        <a href="{{ route('closet.stylist') }}" class="vogue-sidebar-link {{ request()->routeIs('closet.stylist') ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="feature_ai_stylist">AI Stylist</span></a>
-        <a href="{{ route('closet.tryon') }}" class="vogue-sidebar-link {{ request()->routeIs('closet.tryon') ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="feature_try_on">Try-On / Pose</span></a>
+        <a href="{{ route('closet.hub') }}" class="vogue-sidebar-link {{ request()->routeIs('closet.hub') ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="feature_smart_closet">智慧衣櫥總覽</span></a>
+        <a href="{{ route('closet.create') }}" class="vogue-sidebar-link {{ request()->routeIs('closet.create') ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="feature_upload">上傳衣物</span></a>
+        <a href="{{ route('closet.search') }}" class="vogue-sidebar-link {{ request()->routeIs('closet.search') ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="feature_ai_search">AI 搜尋</span></a>
+        <a href="{{ route('closet.stylist') }}" class="vogue-sidebar-link {{ request()->routeIs('closet.stylist') ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="feature_ai_stylist">AI 穿搭顧問</span></a>
+        <a href="{{ route('closet.tryon') }}" class="vogue-sidebar-link {{ request()->routeIs('closet.tryon') ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="feature_try_on">試穿 / 姿態</span></a>
     </nav>
 
-    <div class="vogue-sidebar-section-title" data-i18n="sidebar_readme_modules">未完成暫放區</div>
-    <p class="vogue-sidebar-note" data-i18n="sidebar_staging_note">這裡是舊版 README 模組的暫放工作台，待後端完成後再正式串接。</p>
+    <div class="vogue-sidebar-section-title" data-i18n="sidebar_readme_modules">模組工作區</div>
+    <p class="vogue-sidebar-note" data-i18n="sidebar_staging_note">這裡保留平台延伸模組入口，方便逐步接上後端與 AI 服務。</p>
     <nav class="vogue-sidebar-nav">
-        <a href="{{ route('workspace.show', 'community') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'community' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_community">Community</span></a>
-        <a href="{{ route('workspace.show', 'showcase') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'showcase' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_showcase">Showcase</span></a>
-        <a href="{{ route('workspace.show', 'blind-box') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'blind-box' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_blind_box">Blind Box</span></a>
-        <a href="{{ route('workspace.show', 'runway-video') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'runway-video' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_runway_video">Runway Video</span></a>
-        <a href="{{ route('workspace.show', 'chat-assistant') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'chat-assistant' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_chat_assistant">Chat Assistant</span></a>
-        <a href="{{ route('workspace.show', 'digital-twin') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'digital-twin' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_digital_twin">Digital Twin</span></a>
-        <a href="{{ route('workspace.show', 'travel-packer') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'travel-packer' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_travel_packer">Travel Packer</span></a>
-        <a href="{{ route('workspace.show', 'smart-storage') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'smart-storage' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_smart_storage">Smart Storage</span></a>
-        <a href="{{ route('workspace.show', 'quick-snap') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'quick-snap' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_quick_snap">Quick Snap</span></a>
-        <a href="{{ route('workspace.show', 'smart-tag') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'smart-tag' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_smart_tag">Smart Tag</span></a>
-        <a href="{{ route('workspace.show', 'magic-mirror') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'magic-mirror' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_magic_mirror">Magic Mirror</span></a>
-        <a href="{{ route('workspace.show', 'stylist-call') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'stylist-call' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_ai_bestie_call">AI Bestie Call</span></a>
+        <a href="{{ route('workspace.show', 'community') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'community' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_community">社群</span></a>
+        <a href="{{ route('workspace.show', 'showcase') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'showcase' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_showcase">展示牆</span></a>
+        <a href="{{ route('workspace.show', 'blind-box') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'blind-box' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_blind_box">穿搭盲盒</span></a>
+        <a href="{{ route('workspace.show', 'runway-video') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'runway-video' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_runway_video">伸展台影片</span></a>
+        <a href="{{ route('workspace.show', 'chat-assistant') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'chat-assistant' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_chat_assistant">聊天助理</span></a>
+        <a href="{{ route('workspace.show', 'digital-twin') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'digital-twin' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_digital_twin">數位分身</span></a>
+        <a href="{{ route('workspace.show', 'travel-packer') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'travel-packer' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_travel_packer">旅行打包</span></a>
+        <a href="{{ route('workspace.show', 'smart-storage') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'smart-storage' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_smart_storage">智慧收納</span></a>
+        <a href="{{ route('workspace.show', 'quick-snap') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'quick-snap' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_quick_snap">快速拍照</span></a>
+        <a href="{{ route('workspace.show', 'smart-tag') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'smart-tag' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_smart_tag">智慧標籤</span></a>
+        <a href="{{ route('workspace.show', 'magic-mirror') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'magic-mirror' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_magic_mirror">魔鏡試穿</span></a>
+        <a href="{{ route('workspace.show', 'stylist-call') }}" class="vogue-sidebar-link {{ request()->routeIs('workspace.show') && request()->route('module') === 'stylist-call' ? 'is-active' : '' }}"><span class="vogue-sidebar-icon">•</span><span data-i18n="module_ai_bestie_call">AI 好友通話</span></a>
     </nav>
 </aside>
 
 <header class="vogue-shell vogue-topbar-wrap py-5 md:py-6">
     <nav class="vogue-nav vogue-topbar">
-        <button id="vogue-sidebar-toggle" type="button" class="vogue-switch" aria-label="Toggle sidebar">
-            <span data-i18n="toggle_sidebar">選單</span>
+        <button id="vogue-sidebar-toggle" type="button" class="vogue-switch" aria-label="切換側欄">
+            <span data-i18n="toggle_sidebar">側欄</span>
         </button>
 
         <div class="vogue-nav-cta">
             <div class="vogue-tools">
-                <button id="vogue-lang-toggle" type="button" class="vogue-switch" aria-label="Toggle language">
-                    <span class="vogue-switch-label" data-i18n="switch_lang">中 / EN</span>
+                <button id="vogue-lang-toggle" type="button" class="vogue-switch" aria-label="固定中文">
+                    <span class="vogue-switch-label" data-i18n="switch_lang">中文</span>
                 </button>
-                <button id="vogue-theme-toggle" type="button" class="vogue-switch" aria-label="Toggle theme">
+                <button id="vogue-theme-toggle" type="button" class="vogue-switch" aria-label="切換主題">
                     <span class="vogue-switch-label" data-i18n="switch_theme">夜間</span>
                 </button>
             </div>
 
-            <form method="POST" action="{{ route('logout') }}" class="inline-block">
-                @csrf
-                <button type="submit" class="vogue-btn vogue-btn-solid" data-i18n="logout">登出</button>
-            </form>
+            @auth
+                <form method="POST" action="{{ route('logout') }}" class="inline-block">
+                    @csrf
+                    <button type="submit" class="vogue-btn vogue-btn-solid" data-i18n="logout">登出</button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="vogue-btn vogue-btn-soft">登入</a>
+                <a href="{{ route('register') }}" class="vogue-btn vogue-btn-solid">註冊</a>
+            @endauth
         </div>
     </nav>
 </header>
 
 <script>
+    (function () {
+        if (window.__vogueThemeControllerReady) {
+            return;
+        }
+
+        window.__vogueThemeControllerReady = true;
+
+        const storageTheme = 'vogue-home-theme';
+        const themeToggle = document.getElementById('vogue-theme-toggle');
+        const themeLabel = themeToggle ? themeToggle.querySelector('.vogue-switch-label') : null;
+        const validTheme = (theme) => theme === 'light' || theme === 'dark';
+        const preferredTheme = () => {
+            const savedTheme = localStorage.getItem(storageTheme);
+
+            if (validTheme(savedTheme)) {
+                return savedTheme;
+            }
+
+            return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        };
+        const applyTheme = (theme) => {
+            const nextTheme = validTheme(theme) ? theme : preferredTheme();
+
+            document.documentElement.dataset.theme = nextTheme;
+            document.body.dataset.theme = nextTheme;
+            localStorage.setItem(storageTheme, nextTheme);
+
+            if (themeLabel) {
+                themeLabel.textContent = nextTheme === 'dark' ? '夜間' : '日間';
+            }
+        };
+
+        window.vogueApplyTheme = applyTheme;
+        applyTheme(preferredTheme());
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const current = document.body.dataset.theme || preferredTheme();
+                applyTheme(current === 'dark' ? 'light' : 'dark');
+            });
+        }
+    })();
+
     (function () {
         const body = document.body;
         body.classList.add('vogue-has-sidebar');
@@ -96,15 +144,11 @@
         }
 
         const isDesktop = () => window.innerWidth > 980;
-
         const setCollapsed = (collapsed) => {
             body.classList.toggle('vogue-sidebar-collapsed', collapsed);
             localStorage.setItem(storageKey, collapsed ? '1' : '0');
         };
-
-        const setMobileOpen = (open) => {
-            body.classList.toggle('vogue-sidebar-open', open);
-        };
+        const setMobileOpen = (open) => body.classList.toggle('vogue-sidebar-open', open);
 
         setCollapsed(localStorage.getItem(storageKey) === '1');
 
@@ -118,7 +162,6 @@
         });
 
         backdrop.addEventListener('click', () => setMobileOpen(false));
-
         window.addEventListener('resize', () => {
             if (window.innerWidth > 980) {
                 setMobileOpen(false);
