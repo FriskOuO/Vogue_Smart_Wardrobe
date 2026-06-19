@@ -49,3 +49,7 @@ ai_service/models/ultralytics/
 
 # AI generated outputs
 ai_service/static/tryon/
+
+# Local pytest temp/cache
+storage/pytest-cache/
+storage/pytest-tmp/
