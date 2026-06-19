@@ -58,3 +58,23 @@ class PoseRequest(BaseModel):
     task_type: Optional[str] = "magic_mirror"
     return_annotated_image: Optional[bool] = True
     mock_mode: Optional[bool] = True
+
+
+class VqaRequest(BaseModel):
+    schema_version: Optional[str] = "v1"
+    request_id: str
+    user_id: int
+    image_path: str
+    questions: Optional[Dict[str, str]] = None
+    mock_mode: Optional[bool] = False
+
+
+class TryOnGenerateRequest(BaseModel):
+    schema_version: Optional[str] = "v1"
+    request_id: str
+    user_id: int
+    model: Optional[str] = "idm-vton"
+    person_image_url: str
+    clothing_image_url: str
+    pose_analysis: Optional[Dict[str, Any]] = {}
+    mock_mode: Optional[bool] = False

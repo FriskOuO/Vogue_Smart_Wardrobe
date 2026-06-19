@@ -96,8 +96,87 @@ POST /ai/attributes
 POST /ai/embed/image
 POST /ai/embed/text
 POST /ai/search/similar
+GET  /ai/vector-store/preflight
+POST /ai/vector-store/collection/ensure
 POST /ai/pose
+POST /tryon/generate
+GET  /tryon/status/{task_id}
 ```
+
+### 5.9 Hugging Face IDM-VTON Try-on Demo
+
+VogueAI can route virtual try-on demo jobs through this AI Service instead of calling Hugging Face directly from Laravel:
+
+```text
+Laravel -> Python FastAPI AI Service -> gradio_client -> yisol/IDM-VTON
+```
+
+This provider is intended for a student project demo / research prototype. The public Hugging Face Space may sleep, queue, rate limit, fail, or change without notice. IDM-VTON is not treated as a commercial SLA provider in this project, and the app keeps degraded fallback behavior so Try-on L1 pose analysis still works when the Space is unavailable.
+
+Laravel `.env`:
+
+```env
+AI_EXTERNAL_PROVIDER_CALLS=true
+AI_TRYON_PROVIDER=huggingface_idm_vton
+AI_TRYON_MODEL=idm-vton
+AI_TRYON_API_BASE_URL=http://127.0.0.1:8001
+AI_TRYON_API_KEY=
+AI_TRYON_CREATE_ENDPOINT=/tryon/generate
+AI_TRYON_STATUS_ENDPOINT=/tryon/status/{id}
+AI_TRYON_MODE=async
+AI_TRYON_OUTPUT_FORMAT=png
+AI_TRYON_RETURN_BASE64=false
+```
+
+AI Service `.env`:
+
+```env
+TRYON_PROVIDER=huggingface_idm_vton
+TRYON_MODEL=idm-vton
+TRYON_SPACE=yisol/IDM-VTON
+TRYON_API_TOKEN=
+TRYON_PUBLIC_BASE_URL=http://127.0.0.1:8001
+TRYON_OUTPUT_DIR=static/tryon
+```
+
+Install the client dependency:
+
+```powershell
+cd ai_service
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+Create a local async try-on task:
+
+```http
+POST /tryon/generate
+X-Internal-AI-Token: <AI_INTERNAL_TOKEN>
+Content-Type: application/json
+```
+
+```json
+{
+  "model": "idm-vton",
+  "request_id": "tryon_20260617_001",
+  "user_id": 1,
+  "person_image_url": "https://example.com/person.jpg",
+  "clothing_image_url": "https://example.com/clothing.jpg",
+  "pose_analysis": {
+    "pose_quality_score": 0.82
+  }
+}
+```
+
+Poll the local task once:
+
+```http
+GET /tryon/status/local_hf_tryon_xxx
+X-Internal-AI-Token: <AI_INTERNAL_TOKEN>
+```
+
+Successful results are copied into `ai_service/static/tryon/` and returned as `output_url`, for example `http://127.0.0.1:8001/static/tryon/local_hf_tryon_xxx.png`.
+
+If the Space is unavailable or the dependency is missing, the endpoint returns a degraded / failed contract instead of crashing. Duplicating the Space or using GPU hardware on Hugging Face can improve stability, but may create Hugging Face billing.
 
 ---
 
@@ -130,6 +209,20 @@ POST /ai/pose
     "veo_api_key": "missing",
     "brave_search_api_key": "missing",
     "weather_api_key": "missing"
+  },
+  "vector_store": {
+    "target_provider": "qdrant",
+    "active_provider": "mock_sqlite_fallback",
+    "adapter": "qdrant-vector-store-v1",
+    "status": "planned",
+    "client_package": "missing",
+    "target_url": "http://127.0.0.1:6333",
+    "target_collection": "vogueai_clothing_embeddings",
+    "fallback_collection": "ai_embeddings",
+    "fallback_active": true,
+    "api_key_configured": false,
+    "connection_check": "not_attempted",
+    "degraded_reason": "QDRANT_CLIENT_NOT_INSTALLED"
   }
 }
 ```
@@ -157,7 +250,25 @@ style_tags
 material_guess
 pattern
 confidence
+image_caption.target_provider = blip
+image_caption.active_provider = mock_caption_fallback
+image_caption.adapter = blip-image-caption-v1
+image_caption.target_model = Salesforce/blip-image-captioning-base
+image_caption.model_repository = Salesforce/blip-image-captioning-base
+image_caption.adapter_methods.image_caption = blip_generate_caption
 ```
+
+正式 adapter method 已保留於 `services/blip_caption_service.py`：
+
+```text
+blip_generate_caption(image_path)
+```
+
+安裝 `ai_service/requirements-ml.txt` 並備妥模型 cache 後，可產生真實圖片描述；目前 `/ai/attributes` 仍走 mock-first fallback。
+
+若 request 明確傳入 `mock_mode=false`，API 會先嘗試 `blip_generate_caption()`；若依賴或模型不可用，會保留 mock caption，並在 `real_adapter_attempt` 回傳失敗原因。
+
+Laravel 端會依照 `AI_MOCK_MODE` 設定自動帶入 `mock_mode`；預設 `AI_MOCK_MODE=true` 保持 demo fallback，正式環境可改為 `false` 來啟用 adapter attempt。
 
 Laravel 使用場景：
 
@@ -182,8 +293,32 @@ embedding_type = image
 vector_dimension = 8
 embedding
 embedding_preview
-vector_db.provider = sqlite_fallback
+model = mock-image-embedding
+target_model = clip-vit-base-patch32
+embedding_provider.model_repository = openai/clip-vit-base-patch32
+embedding_provider.target_provider = clip
+embedding_provider.active_provider = mock_embedding_fallback
+embedding_provider.adapter = clip-embedding-v1
+vector_db.provider = mock_sqlite_fallback
+vector_db.target_provider = qdrant
+vector_db.target_url = http://127.0.0.1:6333
+vector_db.connection_check = not_attempted
+vector_db.target_vector_size = 512
+vector_db.active_vector_size = 8
+vector_db.distance = Cosine
 ```
+
+正式 adapter method 已保留於 `services/clip_embedding_service.py`：
+
+```text
+clip_embed_image(image_path)
+```
+
+安裝 `ai_service/requirements-ml.txt` 並備妥模型 cache 後，可產生 512D `clip_image` vector；目前 `/ai/embed/image` 仍走 mock-first fallback。
+
+若 request 明確傳入 `mock_mode=false`，API 會先嘗試 `clip_embed_image()`；若成功且 `store_to_vector_db=true`，會再嘗試 `qdrant_upsert_clothing_embedding()`。任一正式依賴不可用時會保留 mock embedding，並在 `real_adapter_attempt` 回傳失敗原因。
+
+Laravel 端會依照 `AI_MOCK_MODE` 設定自動帶入 `mock_mode`；預設 `AI_MOCK_MODE=true` 保持 demo fallback，正式環境可改為 `false` 來啟用 adapter attempt。
 
 Laravel 使用場景：
 
@@ -208,7 +343,25 @@ embedding_type = text
 vector_dimension = 8
 embedding
 normalized_query
+model = mock-text-embedding
+target_model = clip-vit-base-patch32
+embedding_provider.model_repository = openai/clip-vit-base-patch32
+embedding_provider.target_provider = clip
+embedding_provider.active_provider = mock_embedding_fallback
+embedding_provider.adapter = clip-embedding-v1
 ```
+
+正式 adapter method 已保留於 `services/clip_embedding_service.py`：
+
+```text
+clip_embed_text(query)
+```
+
+安裝 `ai_service/requirements-ml.txt` 並備妥模型 cache 後，可產生 512D `clip_text` vector；目前 `/ai/embed/text` 仍走 mock-first fallback。
+
+若 request 明確傳入 `mock_mode=false`，API 會先嘗試 `clip_embed_text()`；若依賴或模型不可用，會保留 mock embedding，並在 `real_adapter_attempt` 回傳失敗原因。
+
+Laravel 端會依照 `AI_MOCK_MODE` 設定自動帶入 `mock_mode`；預設 `AI_MOCK_MODE=true` 保持 demo fallback，正式環境可改為 `false` 來啟用 adapter attempt。
 
 Laravel 使用場景：
 
@@ -220,7 +373,114 @@ AI Search 以文搜圖時，先將使用者輸入轉成 text embedding。
 
 ---
 
-### 5.5 POST /ai/search/similar
+### 5.5 GET /ai/vector-store/preflight
+
+用途：
+
+```text
+檢查 Qdrant vector store adapter 正式接入前的設定、fallback 與下一步。
+```
+
+預設不主動連線 Qdrant daemon，只檢查本機設定與 `qdrant-client` 是否可用：
+
+```text
+vector_store.target_provider = qdrant
+vector_store.active_provider = mock_sqlite_fallback
+vector_store.adapter = qdrant-vector-store-v1
+vector_store.target_url = http://127.0.0.1:6333
+vector_store.target_collection = vogueai_clothing_embeddings
+vector_store.target_vector_size = 512
+vector_store.active_vector_size = 8
+vector_store.distance = Cosine
+vector_store.collection_schema.named_vectors.clip_image.size = 512
+vector_store.collection_schema.named_vectors.clip_text.size = 512
+adapter_methods.ensure_collection = qdrant_ensure_collection(create_missing=True)
+adapter_methods.upsert = qdrant_upsert_clothing_embedding
+adapter_methods.search = qdrant_search_similar_clothing
+adapter_methods.activation_mode = manual_internal_endpoint
+collection_plan.dry_run = true
+collection_plan.operation = create_or_verify_collection
+collection_plan.vectors_config.clip_image.size = 512
+collection_plan.vectors_config.clip_text.distance = Cosine
+upsert_plan.operation = upsert_clothing_embedding
+upsert_plan.vector_name = clip_image
+upsert_plan.point_id_template = <clothing_id>
+search_plan.operation = search_similar_clothing
+search_plan.query_vector_name = clip_image
+search_plan.filter_template.must[0].key = user_id
+dimension_validation.expected_vector_size = 512
+dimension_validation.actual_vector_size = 8
+dimension_validation.error_code = VECTOR_DIMENSION_MISMATCH
+dimension_validation.fallback_required = true
+vector_store.connection_check = not_attempted
+readiness.fallback_safe = true
+```
+
+`collection_plan` 是 dry-run 規格，不會建立 Qdrant collection。正式接入時需先安裝 `qdrant-client`、啟動 Qdrant daemon，並確認不要把目前 mock 8D embeddings 寫入 512D target collection。
+`upsert_plan` 與 `search_plan` 固定 adapter 要使用的 point id、named vector、payload 與 user filter。Qdrant point id 使用整數 `clothing_id`，衣物識別資訊也會保留在 payload。`qdrant_upsert_clothing_embedding()` 與 `qdrant_search_similar_clothing()` 已提供正式 method path，並會先用 `dimension_validation` 阻擋 mock 8D vector。
+`dimension_validation` 會明確阻擋目前 mock 8D vector 進入 512D Qdrant collection；只有真 CLIP 512D embedding 就緒後才可切換。
+
+### 5.6 POST /ai/vector-store/collection/ensure
+
+用途：
+
+```text
+正式 Qdrant adapter 的 internal collection 建立 / 驗證入口。
+```
+
+此端點需要 `X-Internal-AI-Token`。預設 `create_missing=false` 只驗證 collection 是否存在；加上 `create_missing=true` 才會在 `qdrant-client` 已安裝且 Qdrant daemon 可連線時呼叫 `recreate_collection`，並建立 payload keyword indexes。
+
+```text
+POST /ai/vector-store/collection/ensure?create_missing=true
+```
+
+目前未安裝 `qdrant-client` 時會安全回傳：
+
+```text
+status = degraded
+operation = ensure_collection
+error_code = QDRANT_CLIENT_NOT_INSTALLED
+fallback_safe = true
+```
+
+這個端點不會被 `/health`、`/ai/embed/image` 或 `/ai/search/similar` 自動觸發，避免 demo 啟動時意外重建 collection。
+
+AI Service `.env` 需要保留以下 Qdrant / embedding 設定：
+
+```text
+EMBEDDING_PROVIDER=clip
+EMBEDDING_MODEL=clip-vit-base-patch32
+EMBEDDING_MODEL_REPOSITORY=openai/clip-vit-base-patch32
+VECTOR_STORE_PROVIDER=qdrant
+VECTOR_STORE_COLLECTION=vogueai_clothing_embeddings
+VECTOR_STORE_URL=http://127.0.0.1:6333
+VECTOR_STORE_API_KEY=
+VECTOR_STORE_TARGET_VECTOR_SIZE=512
+VECTOR_STORE_ACTIVE_VECTOR_SIZE=8
+VECTOR_STORE_DISTANCE=Cosine
+```
+
+`qdrant-client` 已宣告於 `ai_service/requirements.txt`。CLIP / BLIP 正式 adapter 的 `torch`、`transformers`、`pillow` 則放在 `ai_service/requirements-ml.txt`。未安裝前，preflight、embedding flow 與 caption flow 仍會回傳 degraded fallback。
+
+若要嘗試真連線檢查，可使用：
+
+```text
+GET /ai/vector-store/preflight?check_connection=true
+```
+
+沒有安裝 `qdrant-client` 時會安全回傳：
+
+```text
+connection.connection_check = skipped
+connection.error_code = QDRANT_CLIENT_NOT_INSTALLED
+readiness.fallback_safe = true
+```
+
+此 endpoint 需要 `X-Internal-AI-Token`。
+
+---
+
+### 5.7 POST /ai/search/similar
 
 用途：
 
@@ -245,7 +505,7 @@ AI Search 依照回傳 clothing_id 查詢 clothes 資料表，並顯示衣物搜
 
 ---
 
-### 5.6 POST /ai/pose
+### 5.8 POST /ai/pose
 
 用途：
 
@@ -303,6 +563,15 @@ pip install -r ai_service\requirements.txt
 cd ai_service
 uvicorn main:app --host 127.0.0.1 --port 8001 --reload
 ```
+
+Windows hidden/background launch can use the stable wrapper:
+
+```powershell
+cd ai_service
+.\.venv\Scripts\pythonw.exe run_server.py
+```
+
+`run_server.py` disables Uvicorn's stdout-dependent log formatter so `pythonw.exe` can keep the service alive without a visible console. If startup fails, it writes the traceback to `storage/logs/ai-service-idm-vton-python.log`.
 
 成功後會看到：
 

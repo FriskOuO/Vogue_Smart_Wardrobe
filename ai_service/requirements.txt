@@ -2,3 +2,13 @@
 uvicorn[standard]
 python-dotenv
 pydantic
+pytest
+httpx
+qdrant-client
+gradio_client
+numpy
+pillow
+torch
+torchvision
+transformers
+ultralytics

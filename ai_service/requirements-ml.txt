@@ -1,0 +1,5 @@
+# Optional ML dependencies for real CLIP / BLIP adapters.
+# Keep these separate from requirements.txt so mock-first demo installs stay light.
+torch
+transformers
+pillow
