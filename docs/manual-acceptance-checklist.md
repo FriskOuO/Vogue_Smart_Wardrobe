@@ -1,5 +1,360 @@
 # VogueAI Smart Wardrobe - Manual Acceptance Checklist
 
+## 2026-06-10 Gemini API 外部 Smoke 通過
+
+- [x] 已確認 Gemini key 被放在 `.env.example`，不是 `.env`。
+- [x] 已把 `GEMINI_API_KEY` 安全搬到本機 `.env`。
+- [x] 已清空 `.env.example` 的 `GEMINI_API_KEY`，避免 GitHub 外洩。
+- [x] 已執行 `php artisan config:clear`。
+- [x] `php artisan vogueai:gemini-smoke` 已通過：`ready / real_adapter`。
+- [x] Gemini smoke 成功 endpoint：`/v1beta/models/gemini-2.5-flash:generateContent`。
+- [x] AI Service + Qdrant 啟動後，`php artisan vogueai:provider-check` -> 0 failed / 0 warnings。
+- [x] AI Service + Qdrant 啟動後，`php artisan vogueai:real-mode-check` -> 0 failed / 0 warnings。
+- [ ] 人工打開 `/closet/stylist`，選「真實模型」產生建議。
+- [ ] 確認最新 Stylist History 顯示 `ready / real_adapter`。
+- [ ] 確認建議內容合理，且沒有捏造不在衣櫥中的衣物。
+
+## 2026-06-10 Gemini API Smoke Gate
+
+- [x] 新增 `php artisan vogueai:gemini-smoke`。
+- [x] Smoke 指令不印出 API key。
+- [x] Smoke 指令不寫入資料庫。
+- [x] 缺少 `GEMINI_API_KEY` 時會安全失敗並顯示 `GEMINI_API_KEY_MISSING`。
+- [x] fake Gemini structured response 測試可通過 `ready / real_adapter`。
+- [x] 測試：`.\vendor\bin\pest.bat tests\Feature\GeminiSmokeTest.php tests\Feature\AiStylistTest.php tests\Feature\ProviderReadinessTest.php` -> 20 passed / 170 assertions。
+- [x] `GeminiSmokeTest` 已納入 upload-scope 的 `demo-readiness-provider-gates` 分組，`needs-manual-review` 維持 0。
+- [x] 在本機 `.env` 填入有效 `GEMINI_API_KEY`。
+- [x] 執行 `php artisan config:clear`。
+- [x] 執行 `php artisan vogueai:gemini-smoke`，確認 `Summary: Gemini API smoke passed.`。
+- [ ] 到 `/closet/stylist` 選「真實模型」產生建議，確認 history 顯示 `ready / real_adapter`。
+
+## 2026-06-09 Upload Scope Review Gate
+
+- [x] 新增 `php artisan vogueai:upload-scope`。
+- [x] Gate 只做 review，不 stage、不 commit、不 push、不開 PR。
+- [x] 目前 worktree 統計為 115 changed/untracked entries。
+- [x] 最新分組：AI service 26、Laravel backend 17、Views and UI 34、Tests 20、Docs 6、Config and scripts 4、Database migrations 5、Assets 3、Other 0。
+- [x] 最新建議 commit groups：ai-service-adapter-contracts 26、laravel-closet-stylist-workflows 19、demo-readiness-provider-gates 21、localized-ui-and-manual-polish 42、project-docs-and-roadmap 6、telescope-duplicate-migration-cleanup 1、needs-manual-review 0。
+- [x] 已確認 `.env` 沒有出現在 git status。
+- [x] 已確認大型模型 artifact 沒有出現在 git status。
+- [x] 測試：`.\vendor\bin\pest.bat tests\Feature\UploadScopeReviewTest.php tests\Feature\GithubReadinessTest.php` -> 7 passed / 29 assertions。
+- [ ] 使用者確認 115 changed/untracked entries 都是本次上傳範圍。
+- [ ] 使用者確認 Telescope duplicate migration cleanup：保留 `2026_04_22_161640_create_telescope_entries_table.php`，刪除 `2026_04_22_161722_create_telescope_entries_table.php`。
+
+## 2026-06-09 GitHub 前人工整理 / 分組檢查
+
+- [x] 更新 `docs/github-upload-review-checklist.md` 到 2026-06-09 最新狀態。
+- [x] 目前 worktree 統計為 112 changed/untracked entries。
+- [x] 已重新分組：AI service 26、Laravel backend 16、Views and UI 34、Tests 18、Docs 6、Config and scripts 4、Database migrations 5、Assets 3、Other 0。
+- [x] 已確認 `php artisan vogueai:github-check` 仍正確阻擋上傳：2 blockers / 0 warnings。
+- [x] 已確認 `.env` 沒有出現在 git status。
+- [x] 已確認大型模型 artifact 沒有出現在 git status。
+- [x] 已把 Provider readiness / Real-mode acceptance 新增檔案補入 dry-run staging manifest。
+- [ ] 使用者確認 112 changed/untracked entries 都是本次上傳範圍。
+- [ ] 使用者確認 Telescope duplicate migration cleanup：保留 `2026_04_22_161640_create_telescope_entries_table.php`，刪除 `2026_04_22_161722_create_telescope_entries_table.php`。
+- [ ] 使用者重新明確批准 GitHub 上傳後，才可進入 stage / commit / push。
+
+## 2026-06-09 完整 Regression Gate
+
+- [x] Laravel 全量測試：`.\vendor\bin\pest.bat` -> 83 passed / 427 assertions。
+- [x] AI Service 全量測試：`ai_service\.venv\Scripts\python.exe -m pytest ai_service\tests` -> 39 passed / 1 warning。
+- [x] 前端 production build：`npm.cmd run build` -> passed。
+- [x] Demo readiness：`php artisan vogueai:demo-check` -> 0 failed / 1 warning。
+- [x] Real mode check（服務未啟動）：`php artisan vogueai:real-mode-check` -> 0 failed / 1 warning。
+- [x] Provider check（服務未啟動）：`php artisan vogueai:provider-check` -> 0 failed / 3 warnings。
+- [x] 啟動 AI Service + Qdrant 並 ensure collection 後，`provider-check` -> 0 failed / 1 warning。
+- [x] 啟動 AI Service + Qdrant 並 ensure collection 後，`real-mode-check` -> 0 failed / 0 warnings。
+- [x] GitHub readiness：`php artisan vogueai:github-check` -> 2 blockers / 0 warnings，仍正確阻擋上傳。
+- [ ] GitHub 前人工確認 112 changed/untracked entries 的分組與 stage 計畫。
+- [ ] GitHub 前人工確認 Telescope migration deletion 是否保留。
+
+## 2026-06-09 AI Search / AI Stylist 真實模式驗收 Gate
+
+- [x] 新增 `php artisan vogueai:real-mode-check`。
+- [x] Gate 可檢查 AI Search / AI Stylist routes。
+- [x] Gate 可檢查 AI Search `provider_mode=real` 與 `mock_mode=false` wiring。
+- [x] Gate 可檢查 AI Search 真實模式 feature test 覆蓋。
+- [x] Gate 可檢查 AI Stylist `provider_mode=real` 與 Gemini fallback wiring。
+- [x] Gate 可檢查缺少 `GEMINI_API_KEY` 時的 fallback test。
+- [x] Gate 可檢查 fake Gemini ready response test。
+- [x] 未啟動 AI Service / Qdrant 時，結果為 0 failed / 1 warning。
+- [x] 啟動 AI Service + Qdrant 並 ensure collection 後，結果為 0 failed / 0 warnings。
+- [ ] 若已填 `GEMINI_API_KEY`，執行外部 Gemini smoke 並確認 AI Stylist history 為 ready / real_adapter。
+
+指令：
+```powershell
+php artisan vogueai:real-mode-check
+```
+
+## 2026-06-09 真實 Provider 啟動前總驗收 Gate
+
+- [x] 新增 `php artisan vogueai:provider-check`。
+- [x] Gate 可檢查 CLIP / BLIP cache、Qdrant launcher、AI Search 真實模式入口、AI Stylist 真實模式入口。
+- [x] Gate 可檢查 Qdrant runtime / Hugging Face cache 沒有進入 Git status。
+- [x] 目前結果：0 failed / 3 warnings。
+- [x] 啟動 AI Service 後重跑 provider-check，確認 AI service health warning 消失。
+- [x] 啟動 Qdrant 後重跑 provider-check，確認 Qdrant preflight warning 消失。
+- [x] 啟動 AI Service + Qdrant 並 ensure collection 後，`provider-check` 收斂到 0 failed / 1 warning。
+- [ ] 填入有效 `GEMINI_API_KEY` 後重跑 provider-check，確認 Gemini config warning 消失。
+
+指令：
+
+```powershell
+php artisan vogueai:provider-check
+```
+
+## 2026-06-09 AI Stylist Gemini 真實模型驗收入口
+
+- [x] AI Stylist 表單新增「生成模式」。
+- [x] 預設為 `展示模式`，不改變 rule-based demo 行為。
+- [x] 選擇 `真實模型` 時，Laravel 會對 Stylist text generation 傳 `mock_mode=false`。
+- [x] 無 `GEMINI_API_KEY` 時，系統會安全 degraded 並顯示 `GEMINI_API_KEY_MISSING`。
+- [x] 測試已涵蓋 fake Gemini success：Gemini JSON 可寫入 `ready / real_adapter` Stylist History。
+- [ ] 人工打開 `/closet/stylist`，確認表單可看到「生成模式」。
+- [ ] 選 `展示模式` 產生建議，確認歷史紀錄仍是 rule_based / degraded。
+- [ ] 選 `真實模型` 產生建議，確認 Gemini 區塊顯示 real_adapter_attempt 與 fallback/error 資訊。
+- [ ] 若已填 `GEMINI_API_KEY`，確認新紀錄可變成 ready / real_adapter。
+
+## 2026-06-09 AI Search 真實模型畫面驗收入口
+
+- [x] AI Search 表單新增「搜尋模式」。
+- [x] 預設為 `展示模式`，不改變 demo-safe 行為。
+- [x] 選擇 `真實模型` 時，Laravel 本次搜尋會對 AI service 傳 `mock_mode=false`。
+- [x] 啟動 Qdrant 與 AI Service 後，登入 demo 帳號並打開 `/closet/ai-search`。
+- [x] 搜尋模式選 `真實模型`，輸入 `white shirt` 或 `白色上衣`，送出搜尋。
+- [x] 確認結果卡可顯示衣物、分數與 metadata。
+- [x] 確認 metadata 可看到 `qdrant`、`clip-vit-base-patch32`、`qdrant_vector_similarity`。
+- [ ] 切回 `展示模式` 後搜尋仍可安全 fallback。
+
+## 2026-06-09 後續大進度 3：Qdrant 真實搜尋人工驗收
+
+- [x] AI Service `/ai/search/similar` 在 `mock_mode=false` 時改走 Qdrant。
+- [x] Qdrant 搜尋使用 `query_points(...)`，符合 `qdrant-client==1.18.0`。
+- [x] CLIP text query 搜尋衣物已儲存的 `clip_image` vector。
+- [x] Laravel AI Search 接受 `ready` 狀態，不再把真實 provider 成功誤判成失敗。
+- [x] Laravel service smoke：`embedImage`、`embedText`、`searchSimilar` 全部回 `ready`，搜尋結果回到隔離衣物 `999005`。
+- [x] 自動驗證：AI service tests 39 passed；Laravel full tests 75 passed；demo-check 0 failed / 1 warning。
+- [ ] 人工打開 AI Search 頁，輸入衣物描述，確認搜尋頁能正常顯示結果。
+- [ ] 人工確認搜尋結果 metadata 顯示 `qdrant`、`clip-vit-base-patch32`、`qdrant_vector_similarity`。
+- [ ] 人工確認 Qdrant 未啟動時，AI Search 仍可 fallback，不會讓畫面壞掉。
+
+啟動真實 provider 人工驗收時，先開 Qdrant：
+
+```powershell
+.\start-qdrant.ps1 -NoTelemetry
+```
+
+再開 AI Service：
+
+```powershell
+cd ai_service
+.\.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8001
+```
+
+Laravel demo-safe 預設仍可維持 `AI_MOCK_MODE=true`；需要真實搜尋時用 per-request `mock_mode=false` 或後續專門切換設定。
+
+## 2026-06-08 後續大進度 2：CLIP / BLIP HTTP 與 Laravel 局部真實流程
+
+- [x] 新增 AI service 圖片路徑解析器。
+- [x] CLIP / BLIP 支援 Laravel public disk 與 public demo image 路徑。
+- [x] AI Service HTTP `/ai/embed/text` 真實 adapter：ready，512D。
+- [x] AI Service HTTP `/ai/embed/image` 真實 adapter：ready，512D。
+- [x] AI Service HTTP `/ai/attributes` 真實 BLIP caption：adapter attempt ready。
+- [x] Laravel `AiService::embedText(... mock_mode=false)`：ready，512D。
+- [x] Laravel `AiService::embedImage(... mock_mode=false)`：ready，512D。
+- [x] Laravel `AiService::analyzeAttributes(... mock_mode=false)`：BLIP caption ready，屬性 hybrid fallback。
+- [x] 修正 Qdrant point id 為整數 `clothing_id`。
+- [x] HTTP image embedding + `store_to_vector_db=true` 可成功寫入 Qdrant。
+- [x] Laravel image embedding 預設 `store_to_vector_db=true` 可成功寫入 Qdrant。
+- [x] 全域 `AI_MOCK_MODE=true` 保持不變。
+- [x] AI Service tests：38 passed / 2 warnings。
+
+下一個大進度確認：
+
+- [ ] `/ai/search/similar` 改接真實 `qdrant_search_similar_clothing()`。
+- [ ] Laravel AI Search 使用真實 CLIP text embedding + Qdrant search。
+- [ ] 保留 SQL keyword fallback，避免 Qdrant 無結果時空白。
+
+## 2026-06-08 後續大進度 1：真實 Provider 環境啟動
+
+- [x] 安裝 `torch==2.12.0+cpu`。
+- [x] 安裝 `transformers==5.10.2`。
+- [x] 設定專案內 Hugging Face cache：`ai_service/models/huggingface`。
+- [x] 將模型 cache 加入 `.gitignore`。
+- [x] 準備 CLIP model cache：`openai/clip-vit-base-patch32`。
+- [x] 準備 BLIP model cache：`Salesforce/blip-image-captioning-base`。
+- [x] CLIP text embedding smoke：ready，512D。
+- [x] CLIP image embedding smoke：ready，512D。
+- [x] BLIP caption smoke：ready。
+- [x] 下載 Qdrant Windows binary：`tools/qdrant/runtime/qdrant.exe`，版本 `1.18.2`。
+- [x] 將 `tools/qdrant/` 加入 `.gitignore`。
+- [x] 新增 `start-qdrant.ps1`。
+- [x] 建立 / 驗證 Qdrant collection：`vogueai_clothing_embeddings`。
+- [x] 驗證 named vectors：`clip_image` / `clip_text` 均為 512D Cosine。
+- [x] 驗證 payload indexes：`user_id`、`clothing_id`、`category`、`color`、`season`、`occasion`、`style_tags`。
+- [x] AI Service tests：36 passed / 2 warnings。
+- [x] Laravel full tests：74 passed / 373 assertions。
+- [x] Demo readiness：0 failed / 1 warning。
+
+後續人工啟動方式：
+
+```powershell
+.\start-qdrant.ps1 -NoTelemetry
+```
+
+下一個大進度確認：
+
+- [ ] 走 AI Service HTTP endpoint 測 CLIP / BLIP 真實 adapter。
+- [ ] 走 Laravel 呼叫鏈測 `AI_MOCK_MODE=false` 的局部流程。
+- [ ] 把真實 CLIP embedding 寫入 Qdrant，測 AI Search 真實向量搜尋。
+
+## 2026-06-07 大步驟 5：真實模型 / Provider 本機前置
+
+- [x] 跳過 GitHub 上傳，直接推進 Provider 接入前置。
+- [x] 安裝 `qdrant-client==1.18.0`。
+- [x] 安裝 `pillow==12.2.0`。
+- [x] 確認 `torch`、`transformers` 尚未安裝，因此 CLIP / BLIP 仍維持 mock/degraded。
+- [x] AI Service tests：36 passed / 1 warning。
+- [x] Demo readiness：0 failed / 1 warning。
+- [x] AI Service `/health` HTTP 200。
+- [x] `/health` 顯示 `pillow=available`、`qdrant=available`、`clip=mock`、`blip=mock`。
+- [x] Qdrant preflight 使用 `X-Internal-AI-Token` 驗證通過 endpoint 授權。
+- [x] Qdrant preflight 在 daemon 未啟動時安全 degraded：`QDRANT_CONNECTION_FAILED`。
+- [x] Qdrant collection ensure 在 daemon 未啟動時安全 degraded：`QDRANT_COLLECTION_ENSURE_FAILED`。
+- [x] 已更新 `docs/model-integration-readiness.md` 與 `docs/vogueai-core-progress.md`。
+
+待下一個大步驟確認：
+
+- [ ] 啟動 Qdrant daemon。
+- [ ] 建立 / 驗證 512D named-vector collection。
+- [ ] 安裝 `torch`、`transformers`。
+- [ ] 準備 CLIP / BLIP model cache。
+- [ ] 執行 CLIP image/text embedding 真實 smoke test。
+- [ ] 執行 BLIP caption 真實 smoke test。
+- [ ] 有 Gemini API key 後再接 text generation provider。
+
+## 2026-06-07 大步驟 4：模型串接前置準備
+
+- [x] 新增 `docs/model-integration-readiness.md`。
+- [x] CLIP / BLIP / Qdrant / Gemini / pose provider 前置 gate 已整理。
+- [x] 環境變數、optional ML dependencies、啟用順序、smoke commands 已整理。
+- [x] fallback rules 已整理，demo-safe `AI_MOCK_MODE=true` 維持不變。
+- [x] AI Service health 確認仍在 mock/degraded 安全狀態。
+- [x] AI Service tests：36 passed。
+- [x] Demo readiness：0 failed / 1 warning。
+
+## 2026-06-07 大步驟 3：Demo 穩定化
+
+- [x] 第 1 大步驟「全站人工畫面確認」暫定完成。
+- [x] 第 2 大步驟「核心功能使用流程確認」暫定完成。
+- [x] Demo readiness：0 failed / 1 warning；warning 為 GitHub 前 Telescope confirmation。
+- [x] Demo seed 成功：`demo@vogueai.local` / `password`。
+- [x] Demo seed 可重複執行，資料量穩定：3 clothes、4 embeddings、3 wear logs、2 stylist histories、1 outfit log。
+- [x] Demo 圖片資產存在：white shirt、navy blazer、red dress。
+- [x] Demo focused tests：4 tests / 26 assertions 通過。
+- [x] Demo 帳號核心頁：Dashboard、我的衣櫥、AI 搜尋、AI 穿搭顧問、Digital Twin 全部 HTTP 200。
+
+## 2026-06-06 大步驟驗收：全站功能檢查
+
+- [x] 登入後主要頁面 smoke check：11 個主要頁面全部 HTTP 200。
+- [x] 本機服務健康：Laravel、登入頁、Vite、AI Service health 全部 HTTP 200。
+- [x] 核心功能測試：44 tests / 286 assertions 通過。
+- [x] Laravel 全量測試：74 tests / 373 assertions 通過。
+- [x] AI Service 全量測試：36 tests 通過。
+- [x] Demo readiness：0 failed / 1 warning，warning 為 GitHub 前 Telescope migration confirmation。
+- [x] GitHub readiness：仍有 2 blockers，依使用者要求本階段不處理上傳。
+- [x] GitHub 動作：本階段未 stage、未 commit、未 push。
+
+## 2026-06-06 手動回報修正：衣櫥縮圖大小
+
+- [x] 衣櫥列表衣物圖片大小不一致：已改為固定 280px 縮圖舞台。
+- [x] 衣物卡片高度與按鈕位置：已固定，列表視覺更整齊。
+- [x] 詳情頁：仍保留完整圖片顯示。
+- [x] 驗證：closet index Blade 語法通過，前端 build 通過，Vite CSS 已載入新規則。
+
+## 2026-06-06 手動回報修正：帳號總覽主題
+
+- [x] 帳號總覽進入後固定夜間模式：已補上共同主題控制器。
+- [x] 主題切換按鈕：已加入防重複綁定，避免按一下被切換兩次。
+- [x] 驗證：Profile feature tests 通過，前端 build 通過。
+
+## 2026-06-06 手動回報修正
+
+- [x] 我的衣櫥衣物圖片扁平：已改為完整置中顯示，並限制桌機卡片寬度。
+- [x] 同步檢查衣物詳情、AI 搜尋結果、AI 造型建議圖片樣式。
+- [x] 驗證：closet Blade 語法通過，前端 build 通過。
+
+## 2026-06-06 人工畫面確認清單（GitHub 先跳過）
+
+目前本機服務狀態：
+
+- [x] Laravel 首頁：`http://127.0.0.1:8000/` -> HTTP 200
+- [x] Laravel 登入頁：`http://127.0.0.1:8000/login` -> HTTP 200
+- [x] Vite dev client：`http://127.0.0.1:5173/@vite/client` -> HTTP 200
+- [x] AI Service health：`http://127.0.0.1:8001/health` -> HTTP 200
+- [x] GitHub 上傳本階段先跳過，不 stage、不 commit、不 push。
+- [x] 2026-06-06 內容 QA 掃描：首頁、登入、註冊、Dashboard、Smart Closet Hub、我的衣櫥、新增衣物、AI 搜尋、AI 穿搭顧問、試穿、Runway、Digital Twin、帳號總覽、編輯帳號皆 HTTP 200。
+- [x] 2026-06-06 內容 QA 掃描：主要英文介紹關鍵字未命中。
+- [x] 2026-06-06 內容 QA 掃描：主要頁面圖片連結未發現 404。
+- [x] 2026-06-06 截圖包已建立：`storage/logs/manual-acceptance-screenshots/`。
+- [x] 2026-06-06 截圖總覽頁已建立：`storage/logs/manual-acceptance-screenshots/index.html`。
+- [x] 2026-06-06 修正登入/註冊底層 layout 亂碼字串。
+- [x] 2026-06-06 本地人工確認已關閉 debugbar：`DEBUGBAR_ENABLED=false`。
+- [x] 2026-06-06 重新截圖確認首頁、登入、註冊皆 HTTP 200，分頁標題為 VogueAI，且未偵測 debugbar。
+
+登入資訊：
+
+- Email：`demo@vogueai.local`
+- Password：`password`
+
+快速連結：
+
+- 截圖總覽：`storage/logs/manual-acceptance-screenshots/index.html`
+- 首頁：`http://127.0.0.1:8000/`
+- 登入：`http://127.0.0.1:8000/login`
+- 註冊：`http://127.0.0.1:8000/register`
+- Dashboard：`http://127.0.0.1:8000/dashboard`
+- Smart Closet Hub：`http://127.0.0.1:8000/smart-closet`
+- 我的衣櫥：`http://127.0.0.1:8000/closet`
+- 新增衣物：`http://127.0.0.1:8000/closet/create`
+- AI 搜尋：`http://127.0.0.1:8000/closet/ai-search`
+- AI 穿搭顧問：`http://127.0.0.1:8000/closet/stylist`
+- 試穿：`http://127.0.0.1:8000/closet/try-on`
+- Runway Video：`http://127.0.0.1:8000/workspace/runway-video`
+- Digital Twin：`http://127.0.0.1:8000/workspace/digital-twin`
+- 帳號總覽：`http://127.0.0.1:8000/account`
+- 編輯帳號：`http://127.0.0.1:8000/profile`
+
+人工確認問題紀錄：
+
+| 頁面 | 問題 | 狀態 |
+| --- | --- | --- |
+| 待填 | 待填 | 待修 / 已修 / 不處理 |
+
+請依序人工確認：
+
+- [ ] 首頁：第一眼舒服、中文自然、沒有多餘英文介紹。
+- [ ] 登入 / 註冊：表單、按鈕、錯誤訊息都可讀。
+- [ ] Dashboard：主要入口清楚，功能卡片不擁擠。
+- [ ] Smart Closet Hub：功能入口清楚，文案舒服。
+- [ ] 我的衣櫥：衣物列表、圖片、按鈕、空狀態都正常。
+- [ ] 新增衣物：上傳表單欄位清楚，送出按鈕可理解。
+- [ ] 衣物詳情：AI 操作、影像描述、穿著紀錄區塊可讀。
+- [ ] AI 搜尋：搜尋欄、結果卡、相似度資訊可讀；技術 metadata 不影響主要閱讀。
+- [ ] AI 穿搭顧問：推薦流程、歷史紀錄、回饋、保存穿搭可理解。
+- [ ] 試穿：頁面可開，姿態品質資訊與提示可讀。
+- [ ] Runway Video：任務建立區塊、故事板、預覽資訊可讀。
+- [ ] Digital Twin：個人風格卡與衣櫥分析資訊可讀。
+- [ ] 帳號總覽 / 編輯帳號：帳號資料、密碼、刪除區皆中文化。
+
+人工確認完成條件：
+
+- [ ] 沒有明顯英文介紹殘留。
+- [ ] 沒有頁面打不開。
+- [ ] 沒有按鈕文字或欄位名稱看不懂。
+- [ ] 沒有排版明顯破掉、文字重疊或太擠。
+- [ ] 使用者確認可進入 GitHub 前整理階段。
+
 ## 1. 文件目的
 
 本文件用於 VogueAI Smart Wardrobe 展示前的手動驗收。

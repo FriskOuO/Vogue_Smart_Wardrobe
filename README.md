@@ -658,6 +658,40 @@ start-all.ps1
 .\start-all.ps1
 ```
 
+啟動前會先執行：
+
+```powershell
+php artisan vogueai:demo-check
+```
+
+此檢查會確認 Laravel env、AI Service 目錄、AI venv、requirements、核心進度文件、AI mock mode 與 Telescope migration 風險。必要項失敗會停止啟動；warning 只提示。若已手動確認，可略過：
+
+```powershell
+.\start-all.ps1 -SkipDemoCheck
+```
+
+Demo 資料可用以下指令建立與清理：
+
+```powershell
+php artisan vogueai:demo-data seed
+php artisan vogueai:demo-data cleanup
+```
+
+預設 demo 帳號：
+
+```text
+Email: demo@vogueai.local
+Password: password
+```
+
+上 GitHub 前請先執行：
+
+```powershell
+php artisan vogueai:github-check
+```
+
+此指令只檢查、不會 stage / commit / push。若偵測到 dirty worktree、`.env`、大型模型檔，或既有 Telescope migration deletion，會用 blocker 阻止誤上傳。
+
 若 PowerShell 不允許執行腳本，可先執行：
 
 ```powershell
